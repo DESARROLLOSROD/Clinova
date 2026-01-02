@@ -9,7 +9,10 @@ import {
     Activity,
     CreditCard,
     Settings,
-    Stethoscope
+    Stethoscope,
+    FileText,
+    Dumbbell,
+    BarChart3
 } from 'lucide-react'
 import { cn } from '@/components/ui/button'
 
@@ -18,7 +21,10 @@ const navigation = [
     { name: 'Pacientes', href: '/dashboard/pacientes', icon: Users },
     { name: 'Agenda', href: '/dashboard/agenda', icon: Calendar },
     { name: 'Sesiones', href: '/dashboard/sesiones', icon: Activity },
+    { name: 'Plantillas', href: '/dashboard/plantillas', icon: FileText },
+    { name: 'Ejercicios', href: '/dashboard/ejercicios', icon: Dumbbell },
     { name: 'Pagos', href: '/dashboard/pagos', icon: CreditCard },
+    { name: 'Reportes', href: '/dashboard/reportes', icon: BarChart3 },
     { name: 'Configuración', href: '/dashboard/configuracion', icon: Settings },
 ]
 

@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, DollarSign, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PatientActions } from '@/components/patients/PatientActions';
+import { MedicalHistorySection } from '@/components/patients/MedicalHistorySection';
+import { PatientPrescriptionsView } from '@/components/patients/PatientPrescriptionsView';
 
 export const dynamic = 'force-dynamic';
 
@@ -170,20 +173,7 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
               </div>
             )}
           </div>
-          <div className="flex gap-2">
-            <Link href={`/dashboard/agenda/nueva?patient_id=${patient.id}`}>
-              <Button size="sm" className="gap-2">
-                <Calendar size={16} />
-                Nueva Cita
-              </Button>
-            </Link>
-            <Link href={`/dashboard/pagos/nuevo?patient_id=${patient.id}`}>
-              <Button size="sm" variant="outline" className="gap-2">
-                <DollarSign size={16} />
-                Registrar Pago
-              </Button>
-            </Link>
-          </div>
+          <PatientActions patientId={patient.id} />
         </div>
       </div>
 
@@ -201,6 +191,10 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
           <p className="text-2xl font-bold text-blue-600">{sessions?.length || 0}</p>
         </div>
       </div>
+
+      <MedicalHistorySection patientId={patient.id} />
+
+      <PatientPrescriptionsView patientId={patient.id} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
