@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import { FileText, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -25,7 +25,7 @@ export function TreatmentPlanAssignment({
   onSuccess,
   onCancel,
 }: TreatmentPlanAssignmentProps) {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import { Dumbbell, Calendar, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -29,7 +29,7 @@ interface Prescription {
 }
 
 export function PatientPrescriptionsView({ patientId }: PatientPrescriptionsViewProps) {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'paused' | 'completed'>('active');

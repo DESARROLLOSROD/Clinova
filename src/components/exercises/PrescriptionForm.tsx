@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import { X, Plus, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -30,7 +30,7 @@ interface PrescriptionItem {
 }
 
 export function PrescriptionForm({ patientId, onSuccess, onCancel }: PrescriptionFormProps) {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [searchTerm, setSearchTerm] = useState('');

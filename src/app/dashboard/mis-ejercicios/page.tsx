@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import { Dumbbell, CheckCircle, Calendar, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -36,7 +36,7 @@ interface AdherenceLog {
 }
 
 export default function MyExercisesPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [adherenceLogs, setAdherenceLogs] = useState<Record<string, AdherenceLog[]>>({});
   const [loading, setLoading] = useState(true);

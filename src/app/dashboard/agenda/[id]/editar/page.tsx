@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ export default function EditAppointmentPage() {
   const router = useRouter();
   const params = useParams();
   const appointmentId = params.id as string;
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
