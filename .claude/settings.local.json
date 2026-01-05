@@ -5,7 +5,8 @@
       "Bash(find:*)",
       "Bash(powershell -Command \"Get-ChildItem -Path src -Filter *.tsx -Recurse | Where-Object { \\(Get-Content $_FullName -Raw\\) -match ''createClientComponentClient'' } | ForEach-Object { $content = Get-Content $_FullName -Raw; $content = $content -replace ''@supabase/auth-helpers-nextjs'',''@/utils/supabase/client''; $content = $content -replace ''createClientComponentClient'',''createClient''; Set-Content -Path $_FullName -Value $content -NoNewline }; Write-Output ''Archivos actualizados''\")",
       "Bash(npm run build:check)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
