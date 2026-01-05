@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import { Heart, AlertCircle, Pill, Scissors, Users, Phone, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -26,7 +26,7 @@ interface MedicalHistorySectionProps {
 }
 
 export function MedicalHistorySection({ patientId }: MedicalHistorySectionProps) {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [medicalHistory, setMedicalHistory] = useState<MedicalHistory | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);

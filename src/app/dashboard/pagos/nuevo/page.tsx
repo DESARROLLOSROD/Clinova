@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 
 type PaymentMethod = 'cash' | 'card' | 'transfer' | 'insurance';
 type PaymentStatus = 'pending' | 'completed' | 'cancelled' | 'refunded';
@@ -26,7 +26,7 @@ interface Session {
 export default function NewPaymentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -89,7 +89,7 @@ export default function NewPaymentPage() {
     if (error) {
       console.error('Error fetching sessions:', error);
     } else {
-      setSessions(data || []);
+      setSessions((data as any) || []);
     }
     setLoadingSessions(false);
   };

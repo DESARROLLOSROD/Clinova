@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import { InvoiceGenerator } from '@/components/payments/InvoiceGenerator';
 
 type PaymentMethod = 'cash' | 'card' | 'transfer' | 'insurance';
@@ -51,7 +51,7 @@ const statusColors: Record<PaymentStatus, string> = {
 
 export default function PaymentsPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);

@@ -204,7 +204,7 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
               Citas Recientes
             </h2>
             <Link href="/dashboard/agenda">
-              <Button variant="link" size="sm">
+              <Button variant="ghost" size="sm">
                 Ver todas
               </Button>
             </Link>
@@ -255,7 +255,7 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
               Historial de Pagos
             </h2>
             <Link href="/dashboard/pagos">
-              <Button variant="link" size="sm">
+              <Button variant="ghost" size="sm">
                 Ver todos
               </Button>
             </Link>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import { Plus, X, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -12,7 +12,7 @@ interface MedicalHistoryFormProps {
 }
 
 export function MedicalHistoryForm({ patientId, onSuccess, onCancel }: MedicalHistoryFormProps) {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
