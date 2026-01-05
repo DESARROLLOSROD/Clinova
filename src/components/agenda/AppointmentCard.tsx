@@ -6,9 +6,10 @@ import Link from 'next/link';
 
 interface AppointmentCardProps {
     appointment: Appointment;
+    onClick?: (appointment: Appointment) => void;
 }
 
-export function AppointmentCard({ appointment }: AppointmentCardProps) {
+export function AppointmentCard({ appointment, onClick }: AppointmentCardProps) {
     const statusColors = {
         scheduled: 'bg-blue-100 text-blue-800 border-blue-200',
         completed: 'bg-green-100 text-green-800 border-green-200',

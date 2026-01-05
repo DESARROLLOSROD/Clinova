@@ -99,7 +99,7 @@ export default async function TreatmentTemplatesPage() {
             <div key={category}>
               <h2 className="text-lg font-semibold text-gray-900 mb-3">{category}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categoryTemplates.map((template) => (
+                {(categoryTemplates as any[]).map((template) => (
                   <Link
                     key={template.id}
                     href={`/dashboard/plantillas/${template.id}`}
@@ -149,7 +149,7 @@ export default async function TreatmentTemplatesPage() {
                         <div className="mt-3 pt-3 border-t border-gray-100">
                           <p className="text-xs font-medium text-gray-500 mb-1">Objetivos:</p>
                           <div className="flex flex-wrap gap-1">
-                            {template.objectives.slice(0, 3).map((objective, idx) => (
+                            {template.objectives.slice(0, 3).map((objective: any, idx: number) => (
                               <span
                                 key={idx}
                                 className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded"

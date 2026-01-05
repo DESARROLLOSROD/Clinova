@@ -102,13 +102,13 @@ export default async function ReportsPage() {
 
   // Calcular porcentajes de cambio
   const patientGrowth =
-    newPatientsLastMonth > 0
-      ? ((newPatientsThisMonth - newPatientsLastMonth) / newPatientsLastMonth) * 100
+    (newPatientsLastMonth || 0) > 0
+      ? (((newPatientsThisMonth || 0) - (newPatientsLastMonth || 0)) / (newPatientsLastMonth || 0)) * 100
       : 0;
 
   const sessionGrowth =
-    sessionsLastMonth > 0
-      ? ((sessionsThisMonth - sessionsLastMonth) / sessionsLastMonth) * 100
+    (sessionsLastMonth || 0) > 0
+      ? (((sessionsThisMonth || 0) - (sessionsLastMonth || 0)) / (sessionsLastMonth || 0)) * 100
       : 0;
 
   const revenueGrowth =
@@ -117,9 +117,9 @@ export default async function ReportsPage() {
       : 0;
 
   const completionRate =
-    completedAppointments + cancelledAppointments + noShowAppointments > 0
-      ? (completedAppointments /
-          (completedAppointments + cancelledAppointments + noShowAppointments)) *
+    (completedAppointments || 0) + (cancelledAppointments || 0) + (noShowAppointments || 0) > 0
+      ? ((completedAppointments || 0) /
+          ((completedAppointments || 0) + (cancelledAppointments || 0) + (noShowAppointments || 0))) *
         100
       : 0;
 
@@ -220,7 +220,7 @@ export default async function ReportsPage() {
                 <div
                   className="bg-blue-600 h-2 rounded-full"
                   style={{
-                    width: `${Math.min((newPatientsThisMonth / (totalPatients || 1)) * 100, 100)}%`,
+                    width: `${Math.min(((newPatientsThisMonth || 0) / (totalPatients || 1)) * 100, 100)}%`,
                   }}
                 />
               </div>
@@ -235,7 +235,7 @@ export default async function ReportsPage() {
                 <div
                   className="bg-gray-400 h-2 rounded-full"
                   style={{
-                    width: `${Math.min((newPatientsLastMonth / (totalPatients || 1)) * 100, 100)}%`,
+                    width: `${Math.min(((newPatientsLastMonth || 0) / (totalPatients || 1)) * 100, 100)}%`,
                   }}
                 />
               </div>
