@@ -231,7 +231,7 @@ export function TherapistEditForm({ therapist }: TherapistEditFormProps) {
                   }}
                   placeholder="Agregar especialidad"
                 />
-                <Button type="button" onClick={addSpecialty} size="icon">
+                <Button type="button" onClick={addSpecialty} size="sm">
                   <Plus size={18} />
                 </Button>
               </div>

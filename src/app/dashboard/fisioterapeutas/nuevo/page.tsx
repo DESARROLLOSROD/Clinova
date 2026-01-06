@@ -195,7 +195,7 @@ export default function NewTherapistPage() {
                   }}
                   placeholder="Ej. Ortopedia, Deportiva, Neurología"
                 />
-                <Button type="button" onClick={addSpecialty} size="icon">
+                <Button type="button" onClick={addSpecialty} size="sm">
                   <Plus size={18} />
                 </Button>
               </div>
