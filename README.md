@@ -207,7 +207,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-clave-anon-de-supabase
 
 Para más detalles sobre el sistema de notificaciones, consulta [NOTIFICATIONS_SETUP.md](./NOTIFICATIONS_SETUP.md)
 
-### 4. Ejecutar el Servidor de Desarrollo
+### 5. Ejecutar el Servidor de Desarrollo
 
 ```bash
 npm run dev
