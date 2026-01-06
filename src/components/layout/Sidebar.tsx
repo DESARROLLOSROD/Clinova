@@ -12,13 +12,15 @@ import {
     Stethoscope,
     FileText,
     Dumbbell,
-    BarChart3
+    BarChart3,
+    UserCog
 } from 'lucide-react'
 import { cn } from '@/components/ui/button'
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Pacientes', href: '/dashboard/pacientes', icon: Users },
+    { name: 'Fisioterapeutas', href: '/dashboard/fisioterapeutas', icon: UserCog },
     { name: 'Agenda', href: '/dashboard/agenda', icon: Calendar },
     { name: 'Sesiones', href: '/dashboard/sesiones', icon: Activity },
     { name: 'Plantillas', href: '/dashboard/plantillas', icon: FileText },

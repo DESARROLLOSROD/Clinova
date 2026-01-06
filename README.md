@@ -27,13 +27,27 @@ Sistema completo de gestión clínica construido con Next.js 15, Supabase y Type
 - Filtrado por paciente y estado
 - Click en cita para editar directamente desde el calendario
 
-#### 3. Sesiones Clínicas
+#### 3. Gestión de Fisioterapeutas
+- Registro completo de fisioterapeutas
+- Información personal y profesional (licencia, especialidades, certificaciones)
+- Gestión de horarios de disponibilidad
+- Asignación de pacientes a terapeutas
+- Estadísticas por terapeuta (pacientes, citas, sesiones)
+- Edición completa de perfiles
+- Estados de terapeuta (activo, inactivo, de baja)
+- Contacto de emergencia
+
+#### 4. Sesiones Clínicas
+- Vista completa de todas las sesiones con filtros avanzados
+- Filtrado por paciente, terapeuta y rango de fechas
 - Notas SOAP (Subjetivo, Objetivo, Evaluación, Plan)
 - Registro de nivel de dolor (escala 0-10)
 - Asociación automática con citas
+- Edición de sesiones existentes
 - Historial completo de sesiones por paciente
+- Vista detallada de cada sesión
 
-#### 4. Plantillas de Tratamiento
+#### 5. Plantillas de Tratamiento
 - Creación de plantillas reutilizables
 - Categorización de plantillas
 - Objetivos y contraindicaciones
@@ -44,7 +58,7 @@ Sistema completo de gestión clínica construido con Next.js 15, Supabase y Type
 - Estados de plan (activo, pausado, completado, cancelado)
 - Cálculo automático de fecha de fin
 
-#### 5. Biblioteca de Ejercicios
+#### 6. Biblioteca de Ejercicios
 - Catálogo completo de ejercicios
 - Categorización por tipo de ejercicio
 - Clasificación por parte del cuerpo
@@ -65,7 +79,7 @@ Sistema completo de gestión clínica construido con Next.js 15, Supabase y Type
 - Registro de adherencia de ejercicios
 - Tasas de cumplimiento automáticas
 
-#### 6. Historial Médico
+#### 7. Historial Médico
 - Información física (tipo de sangre, altura, peso)
 - Alergias con gestión dinámica
 - Condiciones crónicas
@@ -87,7 +101,7 @@ Sistema completo de gestión clínica construido con Next.js 15, Supabase y Type
   - Pronóstico
 - Tabla de mediciones y valoraciones (ROM, fuerza, balance)
 
-#### 7. Módulo de Pagos
+#### 8. Módulo de Pagos
 - Registro de pagos con múltiples métodos (efectivo, tarjeta, transferencia, seguro)
 - Estados de pago (pendiente, completado, cancelado, reembolsado)
 - Asociación con sesiones
@@ -97,7 +111,18 @@ Sistema completo de gestión clínica construido con Next.js 15, Supabase y Type
 - Estadísticas financieras por paciente
 - KPIs financieros en dashboard
 
-#### 8. Reportes y Estadísticas
+#### 9. Configuración del Sistema
+- Información general de la clínica (nombre, dirección, contacto)
+- Configuración fiscal (RFC, régimen)
+- Configuración de citas (duración predeterminada, políticas de cancelación)
+- Precios y moneda predeterminados
+- Horarios de atención
+- Políticas de cancelación
+- Notificaciones por email y SMS
+- Catálogo de servicios y precios
+- Plantillas de notificaciones personalizables
+
+#### 10. Reportes y Estadísticas
 - Total de pacientes activos
 - Estadísticas de citas (programadas, completadas, canceladas)
 - Tasa de asistencia y no-shows
@@ -107,7 +132,7 @@ Sistema completo de gestión clínica construido con Next.js 15, Supabase y Type
 - Distribución de estados de citas
 - Análisis financiero
 
-#### 9. Dashboard Principal
+#### 11. Dashboard Principal
 - Métricas en tiempo real:
   - Pacientes activos
   - Citas de hoy
@@ -158,12 +183,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-clave-anon-de-supabase
 
 **Opción Alternativa** - Ejecutar scripts individuales (en este orden):
 1. `supabase_schema_patients.sql` - Tabla de pacientes
-2. `supabase_schema_appointments.sql` - Tabla de citas
-3. `supabase_schema_sessions.sql` - Tabla de sesiones
-4. `supabase_schema_payments.sql` - Tabla de pagos
-5. `supabase_schema_treatment_templates.sql` - Plantillas de tratamiento
-6. `supabase_schema_exercises.sql` - Biblioteca de ejercicios
-7. `supabase_schema_medical_history.sql` - Historial médico
+2. `supabase_schema_therapists.sql` - Tabla de fisioterapeutas
+3. `supabase_schema_appointments.sql` - Tabla de citas
+4. `supabase_schema_sessions.sql` - Tabla de sesiones
+5. `supabase_schema_payments.sql` - Tabla de pagos
+6. `supabase_schema_treatment_templates.sql` - Plantillas de tratamiento
+7. `supabase_schema_exercises.sql` - Biblioteca de ejercicios
+8. `supabase_schema_medical_history.sql` - Historial médico
+9. `supabase_schema_settings.sql` - Configuraciones del sistema
 
 ### 4. Ejecutar el Servidor de Desarrollo
 
@@ -186,13 +213,19 @@ src/
 │   │   │   └── [id]/                         # Detalles del paciente
 │   │   │       ├── page.tsx                  # Vista completa del paciente
 │   │   │       └── evaluacion/               # Evaluación inicial
+│   │   ├── fisioterapeutas/                  # Módulo de fisioterapeutas
+│   │   │   ├── page.tsx                      # Lista de fisioterapeutas
+│   │   │   ├── nuevo/                        # Formulario nuevo fisioterapeuta
+│   │   │   └── [id]/                         # Detalles del fisioterapeuta
 │   │   ├── agenda/                           # Módulo de citas
 │   │   │   ├── page.tsx                      # Calendario interactivo
 │   │   │   ├── nueva/                        # Formulario nueva cita
 │   │   │   └── [id]/
 │   │   │       └── editar/                   # Editar/eliminar cita
 │   │   ├── sesiones/                         # Módulo de sesiones
-│   │   │   └── nueva/                        # Formulario SOAP
+│   │   │   ├── page.tsx                      # Lista de sesiones con filtros
+│   │   │   ├── nueva/                        # Formulario SOAP
+│   │   │   └── [id]/                         # Detalles y edición de sesión
 │   │   ├── plantillas/                       # Módulo de plantillas
 │   │   │   ├── page.tsx                      # Lista de plantillas
 │   │   │   ├── nueva/                        # Formulario nueva plantilla
@@ -206,8 +239,10 @@ src/
 │   │   ├── pagos/                            # Módulo de pagos
 │   │   │   ├── page.tsx                      # Lista de pagos con filtros
 │   │   │   └── nuevo/                        # Formulario nuevo pago
-│   │   └── reportes/                         # Módulo de reportes
-│   │       └── page.tsx                      # Estadísticas y KPIs
+│   │   ├── reportes/                         # Módulo de reportes
+│   │   │   └── page.tsx                      # Estadísticas y KPIs
+│   │   └── configuracion/                    # Módulo de configuración
+│   │       └── page.tsx                      # Configuración del sistema
 │   └── login/                                # Autenticación
 ├── components/
 │   ├── layout/                               # Sidebar, Header
@@ -217,12 +252,33 @@ src/
 │   │   ├── MedicalHistoryForm.tsx            # Formulario de edición
 │   │   ├── PatientActions.tsx                # Panel de acciones
 │   │   └── PatientPrescriptionsView.tsx      # Vista de prescripciones
+│   ├── therapists/                           # Componentes de fisioterapeutas
+│   │   ├── TherapistList.tsx                 # Lista de fisioterapeutas
+│   │   └── TherapistEditForm.tsx             # Formulario de edición
+│   ├── sessions/                             # Componentes de sesiones
+│   │   ├── SessionList.tsx                   # Lista de sesiones con filtros
+│   │   └── SessionEditForm.tsx               # Formulario de edición SOAP
 │   ├── exercises/                            # Componentes de ejercicios
 │   │   └── PrescriptionForm.tsx              # Formulario de prescripción
 │   ├── treatments/                           # Componentes de tratamientos
 │   │   └── TreatmentPlanAssignment.tsx       # Asignación de planes
 │   ├── payments/                             # InvoiceGenerator
+│   ├── settings/                             # Componentes de configuración
+│   │   ├── SettingsTabs.tsx                  # Tabs de configuración
+│   │   ├── ClinicSettingsForm.tsx            # Formulario de clínica
+│   │   ├── ServicePricesList.tsx             # Lista de servicios
+│   │   └── NotificationTemplatesList.tsx     # Plantillas de notificaciones
 │   └── ui/                                   # Componentes shadcn/ui
+├── types/                                    # Definiciones de tipos TypeScript
+│   ├── patient.ts                            # Tipos de pacientes
+│   ├── therapist.ts                          # Tipos de fisioterapeutas
+│   ├── appointment.ts                        # Tipos de citas
+│   ├── session.ts                            # Tipos de sesiones
+│   ├── payment.ts                            # Tipos de pagos
+│   ├── exercise.ts                           # Tipos de ejercicios
+│   ├── treatment.ts                          # Tipos de tratamientos
+│   ├── medical-history.ts                    # Tipos de historial médico
+│   └── settings.ts                           # Tipos de configuración
 └── utils/
     └── supabase/                             # Cliente de Supabase
 ```
@@ -275,9 +331,13 @@ npm run lint         # Linter ESLint
 ## Funcionalidades Completadas
 
 - [x] Gestión completa de pacientes con historial médico
+- [x] Gestión completa de fisioterapeutas
+- [x] Asignación de pacientes a fisioterapeutas
 - [x] Edición y eliminación de citas
 - [x] Formulario para editar historial médico
 - [x] Evaluación inicial detallada
+- [x] Vista completa de sesiones con filtros avanzados
+- [x] Edición de sesiones SOAP existentes
 - [x] Portal de ejercicios para pacientes
 - [x] Prescripción de ejercicios con dosificación
 - [x] Registro de adherencia de ejercicios
@@ -285,16 +345,19 @@ npm run lint         # Linter ESLint
 - [x] Generación de facturas en PDF
 - [x] Módulo completo de pagos y finanzas
 - [x] Reportes y estadísticas
+- [x] Configuración del sistema (clínica, servicios, notificaciones)
 
 ## Próximas Mejoras Sugeridas
 
 - [ ] Gráficas visuales en reportes (Chart.js o Recharts)
 - [ ] Exportación de datos (Excel, PDF de reportes)
 - [ ] Vista de tratamientos activos por paciente
-- [ ] Edición de ejercicios y plantillas
+- [ ] Edición y eliminación de ejercicios y plantillas
 - [ ] Recordatorios automáticos por email/SMS
-- [ ] Gestión de múltiples terapeutas/usuarios
+- [ ] Gestión avanzada de horarios de disponibilidad de fisioterapeutas
 - [ ] Roles y permisos (admin, terapeuta, recepcionista)
+- [ ] Edición avanzada de servicios y precios
+- [ ] Editor de plantillas de notificaciones
 - [ ] Integración con dispositivos de medición
 - [ ] Sistema de inventario de equipamiento
 - [ ] Firma digital para consentimientos
