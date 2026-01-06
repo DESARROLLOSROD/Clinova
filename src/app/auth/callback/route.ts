@@ -2,11 +2,14 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
 
-  console.log('Auth callback triggered:', { code: !!code, next, origin })
+  // Use SITE_URL from env or construction from headers
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+
+  console.log('Auth callback triggered:', { code: !!code, next, siteUrl })
 
   if (code) {
     const supabase = await createClient()
@@ -15,12 +18,18 @@ export async function GET(request: Request) {
     if (!error) {
       console.log('Auth code exchange successful', { user: data.user?.email })
 
-      const forwardedHost = request.headers.get('x-forwarded-host')
-      const isLocalEnv = process.env.NODE_ENV === 'development'
+      let redirectUrl = siteUrl;
 
-      let redirectUrl = origin
-      if (!isLocalEnv && forwardedHost) {
-        redirectUrl = `https://${forwardedHost}`
+      if (!redirectUrl) {
+        // Fallback to origin construction if SITE_URL is not set
+        const origin = new URL(request.url).origin;
+        const forwardedHost = request.headers.get('x-forwarded-host');
+        const isLocalEnv = process.env.NODE_ENV === 'development';
+
+        redirectUrl = origin;
+        if (!isLocalEnv && forwardedHost) {
+          redirectUrl = `https://${forwardedHost}`;
+        }
       }
 
       console.log('Redirecting to:', `${redirectUrl}${next}`)
@@ -30,6 +39,7 @@ export async function GET(request: Request) {
     }
   }
 
-  console.warn('Auth callback failed or no code present, redirecting to login')
-  return NextResponse.redirect(`${origin}/login?error=Could not authenticate user`)
+  const finalRedirect = siteUrl ? `${siteUrl}/login?error=auth_failed` : `/login?error=auth_failed`;
+  console.warn('Auth callback failed, redirecting to login:', finalRedirect)
+  return NextResponse.redirect(new URL(finalRedirect, request.url))
 }
