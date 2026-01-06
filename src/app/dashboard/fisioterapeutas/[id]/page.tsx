@@ -20,14 +20,15 @@ import { TherapistEditForm } from '@/components/therapists/TherapistEditForm';
 
 export const dynamic = 'force-dynamic';
 
-export default async function TherapistDetailPage({ params }: { params: { id: string } }) {
+export default async function TherapistDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = await createClient();
 
   // Fetch therapist details
   const { data: therapist, error } = await supabase
     .from('therapists')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (error || !therapist) {
@@ -43,7 +44,7 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
       patient:patients(*)
     `
     )
-    .eq('therapist_id', params.id)
+    .eq('therapist_id', id)
     .eq('status', 'active')
     .order('assigned_date', { ascending: false });
 
@@ -51,13 +52,13 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
   const { count: appointmentsCount } = await supabase
     .from('appointments')
     .select('*', { count: 'exact', head: true })
-    .eq('therapist_id', params.id);
+    .eq('therapist_id', id);
 
   // Fetch sessions count
   const { count: sessionsCount } = await supabase
     .from('sessions')
     .select('*', { count: 'exact', head: true })
-    .eq('therapist_id', params.id);
+    .eq('therapist_id', id);
 
   const getStatusColor = (status: string) => {
     switch (status) {
