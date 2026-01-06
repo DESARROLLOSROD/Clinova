@@ -6,7 +6,7 @@
 -- Crear tabla de fisioterapeutas
 CREATE TABLE IF NOT EXISTS therapists (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  auth_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
 
   -- Información personal
   first_name VARCHAR(100) NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS therapist_patient_assignments (
 -- ÍNDICES para optimizar consultas
 -- =====================================================
 
-CREATE INDEX idx_therapists_user_id ON therapists(user_id);
+CREATE INDEX idx_therapists_auth_user_id ON therapists(auth_user_id);
 CREATE INDEX idx_therapists_email ON therapists(email);
 CREATE INDEX idx_therapists_status ON therapists(status);
 CREATE INDEX idx_therapists_license ON therapists(license_number);

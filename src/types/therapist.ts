@@ -28,7 +28,7 @@ export type TherapistStatus = 'active' | 'inactive' | 'on_leave';
 
 export interface Therapist {
   id: string;
-  user_id?: string;
+  auth_user_id?: string | null; // ID del usuario de Supabase Auth
 
   // Información personal
   first_name: string;

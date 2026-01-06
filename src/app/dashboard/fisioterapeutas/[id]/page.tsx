@@ -17,6 +17,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { TherapistEditForm } from '@/components/therapists/TherapistEditForm';
+import { TherapistAccessManager } from '@/components/therapists/TherapistAccessManager';
 
 export const dynamic = 'force-dynamic';
 
@@ -275,6 +276,25 @@ export default async function TherapistDetailPage({ params }: { params: Promise<
           </CardContent>
         </Card>
       </div>
+
+      {/* Access Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Gestión de Acceso al Sistema</CardTitle>
+          <CardDescription>
+            Controla el acceso del fisioterapeuta a la plataforma
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TherapistAccessManager
+            therapistId={therapist.id}
+            email={therapist.email}
+            hasAccess={!!therapist.auth_user_id}
+            firstName={therapist.first_name}
+            lastName={therapist.last_name}
+          />
+        </CardContent>
+      </Card>
 
       {/* Notes */}
       {therapist.notes && (
