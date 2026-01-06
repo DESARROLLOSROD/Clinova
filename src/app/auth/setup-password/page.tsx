@@ -13,19 +13,42 @@ export default function SetupPasswordPage() {
   const supabase = createClient();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Check if user is authenticated
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
+    // Handle auth callback and check session
+    const handleAuthCallback = async () => {
+      try {
+        // Get the current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          setError('Error al verificar la sesión');
+          setLoading(false);
+          return;
+        }
+
+        if (!session) {
+          // No session, redirect to login
+          router.push('/login');
+          return;
+        }
+
+        // User is authenticated, show the password form
+        setIsReady(true);
+        setLoading(false);
+      } catch (err: any) {
+        console.error('Error in auth callback:', err);
+        setError('Error al procesar la autenticación');
+        setLoading(false);
       }
     };
-    checkAuth();
+
+    handleAuthCallback();
   }, [supabase, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,6 +92,22 @@ export default function SetupPasswordPage() {
       setLoading(false);
     }
   };
+
+  // Show loading state while checking session
+  if (!isReady && loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-gray-900">Verificando sesión...</CardTitle>
+            <CardDescription className="text-gray-600">
+              Por favor espera un momento
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
 
   if (success) {
     return (
