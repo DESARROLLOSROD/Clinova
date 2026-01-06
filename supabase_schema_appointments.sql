@@ -5,7 +5,7 @@ create type public.appointment_status as enum ('scheduled', 'completed', 'cancel
 create table public.appointments (
   id uuid default gen_random_uuid() primary key,
   patient_id uuid references public.patients(id) on delete cascade not null,
-  therapist_id uuid references auth.users(id) on delete set null,
+  therapist_id uuid references public.therapists(id) on delete set null,
   title text,
   start_time timestamp with time zone not null,
   end_time timestamp with time zone not null,
@@ -14,6 +14,9 @@ create table public.appointments (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Create index for therapist lookups
+CREATE INDEX idx_appointments_therapist_id ON public.appointments(therapist_id);
 
 -- Enable RLS
 alter table public.appointments enable row level security;
