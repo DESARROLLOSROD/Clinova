@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Mail, Key, CheckCircle, XCircle } from 'lucide-react';
+import { UserPlus, Key, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface TherapistAccessManagerProps {
@@ -17,8 +17,6 @@ export function TherapistAccessManager({
   therapistId,
   email,
   hasAccess,
-  firstName,
-  lastName,
 }: TherapistAccessManagerProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -125,28 +123,16 @@ export function TherapistAccessManager({
             {isLoading ? 'Creando...' : 'Crear Acceso y Enviar Invitación'}
           </Button>
         ) : (
-          <>
-            <Button
-              onClick={handleResendInvite}
-              disabled={isLoading}
-              variant="outline"
-              className="gap-2"
-              size="sm"
-            >
-              <Mail size={16} />
-              {isLoading ? 'Enviando...' : 'Reenviar Invitación'}
-            </Button>
-            <Button
-              onClick={handleResendInvite}
-              disabled={isLoading}
-              variant="outline"
-              className="gap-2"
-              size="sm"
-            >
-              <Key size={16} />
-              Resetear Contraseña
-            </Button>
-          </>
+          <Button
+            onClick={handleResendInvite}
+            disabled={isLoading}
+            variant="outline"
+            className="gap-2"
+            size="sm"
+          >
+            <Key size={16} />
+            {isLoading ? 'Enviando...' : 'Enviar Email de Recuperación'}
+          </Button>
         )}
       </div>
 
@@ -167,15 +153,15 @@ export function TherapistAccessManager({
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
         <p className="font-medium mb-1">¿Cómo funciona?</p>
         <ul className="list-disc list-inside space-y-1 text-xs">
-          <li>
-            <strong>Crear Acceso:</strong> Crea una cuenta de usuario y envía un email de invitación
-          </li>
-          <li>
-            <strong>Reenviar Invitación:</strong> Envía nuevamente el email de configuración
-          </li>
-          <li>
-            <strong>Resetear Contraseña:</strong> Permite al fisioterapeuta establecer una nueva contraseña
-          </li>
+          {!hasAccess ? (
+            <li>
+              <strong>Crear Acceso:</strong> Crea una cuenta de usuario y envía un email de invitación para que el fisioterapeuta configure su contraseña
+            </li>
+          ) : (
+            <li>
+              <strong>Enviar Email de Recuperación:</strong> Envía un email para que el fisioterapeuta pueda establecer una nueva contraseña
+            </li>
+          )}
         </ul>
       </div>
     </div>

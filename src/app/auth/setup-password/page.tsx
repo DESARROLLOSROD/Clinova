@@ -23,21 +23,32 @@ export default function SetupPasswordPage() {
     const handleAuthCallback = async () => {
       try {
         // Get the current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('Checking session in setup-password page...')
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          setError('Error al verificar la sesión');
+        if (userError) {
+          console.error('User check error:', userError);
+          setError('Error al verificar el usuario');
           setLoading(false);
           return;
         }
 
-        if (!session) {
-          // No session, redirect to login
-          router.push('/login');
+        if (!user) {
+          console.warn('No user found in setup-password, redirecting to login in 500ms...');
+          // Wait a tiny bit more just in case session is being set
+          setTimeout(async () => {
+            const { data: { session: retrySession } } = await supabase.auth.getSession();
+            if (!retrySession) {
+              router.push('/login');
+            } else {
+              setIsReady(true);
+              setLoading(false);
+            }
+          }, 500);
           return;
         }
 
+        console.log('User authenticated:', user.email);
         // User is authenticated, show the password form
         setIsReady(true);
         setLoading(false);
