@@ -1,15 +1,25 @@
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
+    // Create Supabase client with service role for admin operations
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    // Verify authentication - only admins can create users
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json({
+        error: 'Server configuration error',
+        details: 'Missing Supabase credentials. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local'
+      }, { status: 500 });
     }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
 
     const body = await request.json();
     const { therapistId, email, sendInvite = true } = body;
@@ -21,7 +31,7 @@ export async function POST(request: Request) {
     }
 
     // Verify therapist exists
-    const { data: therapist, error: therapistError } = await supabase
+    const { data: therapist, error: therapistError } = await supabaseAdmin
       .from('therapists')
       .select('*')
       .eq('id', therapistId)
@@ -34,19 +44,18 @@ export async function POST(request: Request) {
     }
 
     // Check if user already exists
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
     const userExists = existingUsers?.users?.some(u => u.email === email);
 
     if (userExists) {
       return NextResponse.json({
-        error: 'A user with this email already exists',
+        error: 'Ya existe un usuario con este email',
         userExists: true
       }, { status: 409 });
     }
 
     // Create user in Supabase Auth
-    // Note: This requires admin privileges - we'll need to use the service role key
-    const { data: newUser, error: createUserError } = await supabase.auth.admin.createUser({
+    const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       email_confirm: !sendInvite, // Auto-confirm if not sending invite
       user_metadata: {
@@ -59,13 +68,13 @@ export async function POST(request: Request) {
     if (createUserError) {
       console.error('Error creating user:', createUserError);
       return NextResponse.json({
-        error: 'Failed to create user account',
+        error: 'Error al crear la cuenta de usuario',
         details: createUserError.message
       }, { status: 500 });
     }
 
     // Update therapist record with auth user ID
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('therapists')
       .update({
         auth_user_id: newUser.user.id,
@@ -77,14 +86,14 @@ export async function POST(request: Request) {
       console.error('Error updating therapist:', updateError);
       // User was created but therapist not updated - log this
       return NextResponse.json({
-        warning: 'User created but therapist record not updated',
+        warning: 'Usuario creado pero registro de fisioterapeuta no actualizado',
         userId: newUser.user.id
       }, { status: 200 });
     }
 
     // Send invitation email if requested
     if (sendInvite && newUser.user.email) {
-      const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+      const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
         newUser.user.email,
         {
           redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard`,
@@ -97,7 +106,7 @@ export async function POST(request: Request) {
           success: true,
           userId: newUser.user.id,
           inviteSent: false,
-          message: 'User created but invitation email failed to send'
+          message: 'Usuario creado pero no se pudo enviar el email de invitación'
         });
       }
     }
