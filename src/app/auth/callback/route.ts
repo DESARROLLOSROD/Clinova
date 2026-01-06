@@ -21,14 +21,14 @@ export async function GET(request: Request) {
       let redirectUrl = siteUrl;
 
       if (!redirectUrl) {
-        // Fallback to origin construction if SITE_URL is not set
-        const origin = new URL(request.url).origin;
         const forwardedHost = request.headers.get('x-forwarded-host');
-        const isLocalEnv = process.env.NODE_ENV === 'development';
+        const host = forwardedHost || request.headers.get('host');
+        const proto = request.headers.get('x-forwarded-proto') || 'https';
 
-        redirectUrl = origin;
-        if (!isLocalEnv && forwardedHost) {
-          redirectUrl = `https://${forwardedHost}`;
+        if (host) {
+          redirectUrl = `${proto}://${host}`;
+        } else {
+          redirectUrl = new URL(request.url).origin;
         }
       }
 
@@ -39,7 +39,20 @@ export async function GET(request: Request) {
     }
   }
 
-  const finalRedirect = siteUrl ? `${siteUrl}/login?error=auth_failed` : `/login?error=auth_failed`;
+  const loginPath = '/login?error=auth_failed';
+  let finalRedirect = siteUrl ? `${siteUrl}${loginPath}` : '';
+
+  if (!finalRedirect) {
+    const forwardedHost = request.headers.get('x-forwarded-host');
+    const host = forwardedHost || request.headers.get('host');
+    const proto = request.headers.get('x-forwarded-proto') || 'https';
+    if (host) {
+      finalRedirect = `${proto}://${host}${loginPath}`;
+    } else {
+      finalRedirect = new URL(loginPath, request.url).toString();
+    }
+  }
+
   console.warn('Auth callback failed, redirecting to login:', finalRedirect)
-  return NextResponse.redirect(new URL(finalRedirect, request.url))
+  return NextResponse.redirect(finalRedirect)
 }
