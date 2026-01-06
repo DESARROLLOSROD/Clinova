@@ -33,6 +33,10 @@ export async function GET(request: Request) {
       }
 
       console.log('Redirecting to:', `${redirectUrl}${next}`)
+
+      // We use NextResponse.redirect but we must ensure cookies are sent.
+      // Next.js 15 treats cookies().set() as a mutation that should persist
+      // when the response is sent.
       return NextResponse.redirect(`${redirectUrl}${next}`)
     } else {
       console.error('Auth code exchange error:', error)

@@ -34,17 +34,21 @@ export default function SetupPasswordPage() {
         }
 
         if (!user) {
-          console.warn('No user found in setup-password, redirecting to login in 500ms...');
-          // Wait a tiny bit more just in case session is being set
+          console.warn('No user found in setup-password initial check');
+          // Wait a full second just in case session is being set/persisted
           setTimeout(async () => {
-            const { data: { session: retrySession } } = await supabase.auth.getSession();
-            if (!retrySession) {
-              router.push('/login');
+            console.log('Retrying user check after 1s...');
+            const { data: { user: retryUser } } = await supabase.auth.getUser();
+            if (!retryUser) {
+              console.error('Final check: No user found');
+              setError('No pudimos detectar tu sesión automáticamente. Por favor, intenta hacer clic en el enlace del correo nuevamente o regresa al inicio de sesión.');
+              setLoading(false);
             } else {
+              console.log('Retry success: User found', retryUser.email);
               setIsReady(true);
               setLoading(false);
             }
-          }, 500);
+          }, 1000);
           return;
         }
 
@@ -186,8 +190,20 @@ export default function SetupPasswordPage() {
             </div>
 
             {error && (
-              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800 border border-red-200">
-                {error}
+              <div className="space-y-4">
+                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800 border border-red-200">
+                  {error}
+                </div>
+                {!isReady && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => router.push('/login')}
+                  >
+                    Regresar al Inicio de Sesión
+                  </Button>
+                )}
               </div>
             )}
 
