@@ -20,8 +20,9 @@ Sistema completo de gestión clínica construido con Next.js 15, Supabase y Type
 
 #### 2. Agenda de Citas
 - Calendario semanal interactivo con vista de horas
-- Creación de nuevas citas
+- Creación de nuevas citas con asignación de fisioterapeuta
 - Edición de citas existentes
+- Asignación y reasignación de fisioterapeutas a citas
 - Eliminación de citas
 - Estados de cita (programada, completada, cancelada, no asistió)
 - Filtrado por paciente y estado
@@ -32,6 +33,9 @@ Sistema completo de gestión clínica construido con Next.js 15, Supabase y Type
 - Información personal y profesional (licencia, especialidades, certificaciones)
 - Gestión de horarios de disponibilidad
 - Asignación de pacientes a terapeutas
+- **NUEVO**: Sistema de notificaciones en tiempo real
+- **NUEVO**: Campana de notificaciones con contador de no leídas
+- **NUEVO**: Notificaciones automáticas al asignar citas
 - Estadísticas por terapeuta (pacientes, citas, sesiones)
 - Edición completa de perfiles
 - Estados de terapeuta (activo, inactivo, de baja)
@@ -151,6 +155,8 @@ Sistema completo de gestión clínica construido con Next.js 15, Supabase y Type
 - Arrays de PostgreSQL para listas dinámicas
 - Tipos ENUM para estados
 - Constraints de validación
+- **NUEVO**: Database triggers para notificaciones automáticas
+- **NUEVO**: Supabase Realtime para actualizaciones en tiempo real
 - Generación de facturas en HTML/PDF
 - Filtros avanzados en todas las vistas
 - Componentes reutilizables
@@ -191,6 +197,15 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-clave-anon-de-supabase
 7. `supabase_schema_exercises.sql` - Biblioteca de ejercicios
 8. `supabase_schema_medical_history.sql` - Historial médico
 9. `supabase_schema_settings.sql` - Configuraciones del sistema
+10. **NUEVO**: `supabase_schema_notifications.sql` - Sistema de notificaciones
+
+### 4. Configurar Realtime en Supabase (IMPORTANTE para notificaciones)
+
+1. Ve a tu proyecto en Supabase Dashboard
+2. Navega a **Database** → **Replication**
+3. Habilita Realtime para la tabla `notifications`
+
+Para más detalles sobre el sistema de notificaciones, consulta [NOTIFICATIONS_SETUP.md](./NOTIFICATIONS_SETUP.md)
 
 ### 4. Ejecutar el Servidor de Desarrollo
 
