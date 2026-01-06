@@ -1,5 +1,6 @@
 
 import { User } from 'lucide-react'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
 
 export function Header({ userEmail }: { userEmail?: string }) {
     return (
@@ -7,6 +8,7 @@ export function Header({ userEmail }: { userEmail?: string }) {
             <h2 className="text-lg font-semibold text-gray-800">Panel Principal</h2>
 
             <div className="flex items-center gap-4">
+                <NotificationBell therapistEmail={userEmail} />
                 <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
                     <div className="flex flex-col items-end">
                         <span className="text-sm font-medium text-gray-700">{userEmail || 'Usuario'}</span>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PatientSelect } from '@/components/patients/PatientSelect'
+import { TherapistSelect } from '@/components/therapists/TherapistSelect'
 
 export default function NewAppointmentPage() {
     const router = useRouter()
@@ -17,6 +18,7 @@ export default function NewAppointmentPage() {
 
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [therapistId, setTherapistId] = useState<string>('')
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -36,6 +38,7 @@ export default function NewAppointmentPage() {
 
         const appointmentData = {
             patient_id: formData.get('patient_id') as string,
+            therapist_id: therapistId || null,
             start_time: startDateTime.toISOString(),
             end_time: endDateTime.toISOString(),
             notes: formData.get('notes') as string,
@@ -64,6 +67,11 @@ export default function NewAppointmentPage() {
 
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-6">
                 <PatientSelect name="patient_id" required />
+
+                <TherapistSelect
+                    name="therapist_id"
+                    onValueChange={setTherapistId}
+                />
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
