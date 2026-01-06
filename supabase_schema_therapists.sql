@@ -68,10 +68,7 @@ CREATE TABLE IF NOT EXISTS therapist_patient_assignments (
 
   -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-
-  -- Constraint: Un paciente solo puede tener un terapeuta principal activo
-  UNIQUE (patient_id, is_primary) WHERE (is_primary = true AND status = 'active')
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- =====================================================
@@ -86,6 +83,11 @@ CREATE INDEX idx_therapists_license ON therapists(license_number);
 CREATE INDEX idx_assignments_therapist ON therapist_patient_assignments(therapist_id);
 CREATE INDEX idx_assignments_patient ON therapist_patient_assignments(patient_id);
 CREATE INDEX idx_assignments_status ON therapist_patient_assignments(status);
+
+-- Índice único parcial: Un paciente solo puede tener un terapeuta principal activo
+CREATE UNIQUE INDEX idx_unique_primary_therapist
+  ON therapist_patient_assignments(patient_id)
+  WHERE (is_primary = true AND status = 'active');
 
 -- =====================================================
 -- TRIGGERS para actualizar updated_at

@@ -64,10 +64,7 @@ CREATE TABLE IF NOT EXISTS clinic_settings (
 
   -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-
-  -- Solo debe haber un registro de configuración
-  CONSTRAINT single_settings_row CHECK (id = gen_random_uuid())
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- =====================================================
