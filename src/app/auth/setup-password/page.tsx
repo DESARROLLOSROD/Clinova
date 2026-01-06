@@ -34,21 +34,23 @@ export default function SetupPasswordPage() {
         }
 
         if (!user) {
-          console.warn('No user found in setup-password initial check');
-          // Wait a full second just in case session is being set/persisted
+          console.warn('No user found in setup-password initial check. Checking for fragments or waiting for session...');
+          // Fragments (#access_token=...) are parsed by the Supabase client automatically.
+          // Wait a full second to give it time to parse and set the cookie.
           setTimeout(async () => {
-            console.log('Retrying user check after 1s...');
-            const { data: { user: retryUser } } = await supabase.auth.getUser();
-            if (!retryUser) {
-              console.error('Final check: No user found');
-              setError('No pudimos detectar tu sesión automáticamente. Por favor, intenta hacer clic en el enlace del correo nuevamente o regresa al inicio de sesión.');
+            console.log('Retrying session check after 1s...');
+            const { data: { session: retrySession }, error: retryError } = await supabase.auth.getSession();
+
+            if (retryError || !retrySession) {
+              console.error('Final check: Still no session', retryError);
+              setError('No pudimos detectar tu sesión automáticamente. Por favor, asegúrate de haber hecho clic en el enlace del correo más reciente. Si el problema persiste, intenta copiar y pegar el enlace directamente en una pestaña nueva.');
               setLoading(false);
             } else {
-              console.log('Retry success: User found', retryUser.email);
+              console.log('Retry success: Session found for', retrySession.user.email);
               setIsReady(true);
               setLoading(false);
             }
-          }, 1000);
+          }, 1500); // 1.5 seconds to be safe
           return;
         }
 
