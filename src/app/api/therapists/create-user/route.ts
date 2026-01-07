@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { UserRole } from '@/types/roles';
 
 export async function POST(request: Request) {
   try {
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     });
 
     const body = await request.json();
-    const { therapistId, email, sendInvite = true } = body;
+    const { therapistId, email, sendInvite = true, role = UserRole.THERAPIST } = body;
 
     if (!therapistId || !email) {
       return NextResponse.json({
@@ -61,7 +62,10 @@ export async function POST(request: Request) {
       user_metadata: {
         first_name: therapist.first_name,
         last_name: therapist.last_name,
-        role: 'therapist',
+        role: role,
+      },
+      app_metadata: {
+        role: role,
       },
     });
 
@@ -73,11 +77,12 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
-    // Update therapist record with auth user ID
+    // Update therapist record with auth user ID and role
     const { error: updateError } = await supabaseAdmin
       .from('therapists')
       .update({
         auth_user_id: newUser.user.id,
+        role: role,
         updated_at: new Date().toISOString()
       })
       .eq('id', therapistId);
@@ -89,6 +94,22 @@ export async function POST(request: Request) {
         warning: 'Usuario creado pero registro de fisioterapeuta no actualizado',
         userId: newUser.user.id
       }, { status: 200 });
+    }
+
+    // Assign role in user_roles table
+    const { data: roleData } = await supabaseAdmin
+      .from('roles')
+      .select('id')
+      .eq('name', role)
+      .single();
+
+    if (roleData) {
+      await supabaseAdmin
+        .from('user_roles')
+        .insert({
+          user_id: newUser.user.id,
+          role_id: roleData.id,
+        });
     }
 
     // Send invitation email if requested
