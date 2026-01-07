@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
         newUser.user.email,
         {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/auth/setup-password`,
+          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/setup-password`,
         }
       );
 

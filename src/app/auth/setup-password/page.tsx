@@ -22,45 +22,60 @@ export default function SetupPasswordPage() {
     // Handle auth callback and check session
     const handleAuthCallback = async () => {
       try {
-        // Get the current session
-        console.log('Checking session in setup-password page...')
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        setLoading(true);
+        setError(null);
+        console.log('Starting auth discovery at', window.location.href);
 
-        if (userError) {
-          console.error('User check error:', userError);
-          setError('Error al verificar el usuario');
+        // 1. Check for PKCE code in query params
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get('code');
+
+        if (code) {
+          console.log('Code found, exchanging for session...');
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            console.error('Code exchange failed:', exchangeError);
+            // We don't throw here, we'll check if a session exists anyway
+          } else {
+            console.log('Code exchange successful');
+          }
+        }
+
+        // 2. Robustly check for session (either from exchange, fragment or cookies)
+        const checkSession = async (retryCount = 0): Promise<any> => {
+          console.log(`Checking session (attempt ${retryCount + 1})...`);
+          const { data: { session }, error } = await supabase.auth.getSession();
+
+          if (session) {
+            console.log('Session found!', session.user.email);
+            return session;
+          }
+
+          if (retryCount < 5) { // Try for about 4 seconds
+            console.log('No session yet, waiting 800ms...');
+            await new Promise(r => setTimeout(r, 800));
+            return checkSession(retryCount + 1);
+          }
+
+          if (error) console.error('Last session check error:', error);
+          return null;
+        };
+
+        const session = await checkSession();
+
+        if (!session) {
+          console.error('All session detection attempts failed');
+          setError('No se pudo detectar tu sesión de invitación. Por favor, asegúrate de haber hecho clic en el enlace más reciente o intenta abrir el enlace en una pestaña de incógnito.');
           setLoading(false);
           return;
         }
 
-        if (!user) {
-          console.warn('No user found in setup-password initial check. Checking for fragments or waiting for session...');
-          // Fragments (#access_token=...) are parsed by the Supabase client automatically.
-          // Wait a full second to give it time to parse and set the cookie.
-          setTimeout(async () => {
-            console.log('Retrying session check after 1s...');
-            const { data: { session: retrySession }, error: retryError } = await supabase.auth.getSession();
-
-            if (retryError || !retrySession) {
-              console.error('Final check: Still no session', retryError);
-              setError('No pudimos detectar tu sesión automáticamente. Por favor, asegúrate de haber hecho clic en el enlace del correo más reciente. Si el problema persiste, intenta copiar y pegar el enlace directamente en una pestaña nueva.');
-              setLoading(false);
-            } else {
-              console.log('Retry success: Session found for', retrySession.user.email);
-              setIsReady(true);
-              setLoading(false);
-            }
-          }, 1500); // 1.5 seconds to be safe
-          return;
-        }
-
-        console.log('User authenticated:', user.email);
-        // User is authenticated, show the password form
+        // 3. User is authenticated
         setIsReady(true);
         setLoading(false);
       } catch (err: any) {
-        console.error('Error in auth callback:', err);
-        setError('Error al procesar la autenticación');
+        console.error('Unexpected error in auth flow:', err);
+        setError('Error crítico al procesar la autenticación: ' + (err.message || 'Error desconocido'));
         setLoading(false);
       }
     };
