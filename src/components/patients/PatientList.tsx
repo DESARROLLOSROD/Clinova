@@ -4,14 +4,13 @@ import React from 'react'
 import { Patient } from '@/types/patient'
 import Link from 'next/link'
 import { Edit, Trash2, Eye } from 'lucide-react'
+import { Can } from '@/components/auth/Can'
 
 interface PatientListProps {
     initialPatients: Patient[]
 }
 
 export function PatientList({ initialPatients }: PatientListProps) {
-    // In a real app we might want client-side search/filter here, 
-    // but for now we just display the initial data passed from server.
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
@@ -58,13 +57,21 @@ export function PatientList({ initialPatients }: PatientListProps) {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <Link href={`/dashboard/pacientes/${patient.id}`} className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
-                                                <Eye size={18} />
-                                            </Link>
-                                            {/* 
-                            For MVP we might not implement Edit/Delete immediately in this turn, 
-                            but keeping icons as placeholders or for next steps.
-                        */}
+                                            <Can permission="patients:view">
+                                                <Link href={`/dashboard/pacientes/${patient.id}`} className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
+                                                    <Eye size={18} />
+                                                </Link>
+                                            </Can>
+                                            <Can permission="patients:edit">
+                                                <Link href={`/dashboard/pacientes/${patient.id}/editar`} className="p-2 text-gray-400 hover:text-green-600 transition-colors">
+                                                    <Edit size={18} />
+                                                </Link>
+                                            </Can>
+                                            <Can permission="patients:delete">
+                                                <button className="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </Can>
                                         </div>
                                     </td>
                                 </tr>
