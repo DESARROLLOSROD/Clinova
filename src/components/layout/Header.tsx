@@ -1,18 +1,37 @@
 'use client'
 
-import { User } from 'lucide-react'
+import { User, LogOut } from 'lucide-react'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { useRole } from '@/contexts/RoleContext'
 import { getRoleDisplayName } from '@/utils/roles'
+import { createClient } from '@/utils/supabase/client'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 export function Header({ userEmail }: { userEmail?: string }) {
     const { userRole, user } = useRole()
+    const router = useRouter()
+    const [isLoggingOut, setIsLoggingOut] = useState(false)
 
     const displayName = user?.user_metadata?.first_name && user?.user_metadata?.last_name
         ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
         : userEmail || 'Usuario'
 
     const roleLabel = userRole ? getRoleDisplayName(userRole) : 'Usuario'
+
+    const handleLogout = async () => {
+        try {
+            setIsLoggingOut(true)
+            const supabase = createClient()
+            await supabase.auth.signOut()
+            router.push('/login')
+            router.refresh()
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error)
+        } finally {
+            setIsLoggingOut(false)
+        }
+    }
 
     return (
         <header className="h-16 border-b border-gray-200 bg-white px-8 flex items-center justify-between">
@@ -28,6 +47,15 @@ export function Header({ userEmail }: { userEmail?: string }) {
                     <div className="h-9 w-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
                         <User size={18} />
                     </div>
+                    <button
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                        className="ml-2 flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Cerrar sesión"
+                    >
+                        <LogOut size={18} />
+                        <span className="hidden sm:inline">{isLoggingOut ? 'Cerrando...' : 'Salir'}</span>
+                    </button>
                 </div>
             </div>
         </header>
