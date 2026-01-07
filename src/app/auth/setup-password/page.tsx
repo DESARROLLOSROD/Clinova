@@ -26,7 +26,16 @@ export default function SetupPasswordPage() {
         setError(null);
         console.log('Starting auth discovery at', window.location.href);
 
-        // 1. Check for PKCE code in query params
+        // 1. Initial check (cookies/storage)
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        if (initialSession) {
+          console.log('Session already exists:', initialSession.user.email);
+          setIsReady(true);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Check for PKCE code in query params
         const url = new URL(window.location.href);
         const code = url.searchParams.get('code');
 
@@ -35,29 +44,37 @@ export default function SetupPasswordPage() {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) {
             console.error('Code exchange failed:', exchangeError);
-            // We don't throw here, we'll check if a session exists anyway
-          } else {
-            console.log('Code exchange successful');
           }
         }
 
-        // 2. Robustly check for session (either from exchange, fragment or cookies)
-        const checkSession = async (retryCount = 0): Promise<any> => {
-          console.log(`Checking session (attempt ${retryCount + 1})...`);
-          const { data: { session }, error } = await supabase.auth.getSession();
+        // 3. Manual Fragment Parsing (Implicit Flow fallback)
+        // Some browsers don't trigger the internal pulse of Supabase client on fragment changes or redirects
+        if (window.location.hash) {
+          console.log('Hash fragment detected, parsing...');
+          const hash = window.location.hash.substring(1);
+          const params = new URLSearchParams(hash);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
 
-          if (session) {
-            console.log('Session found!', session.user.email);
-            return session;
+          if (accessToken) {
+            console.log('Found access_token in fragment, setting session manually...');
+            const { error: setSessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
+            });
+            if (setSessionError) console.error('Error setting manual session:', setSessionError);
           }
+        }
 
-          if (retryCount < 5) { // Try for about 4 seconds
-            console.log('No session yet, waiting 800ms...');
-            await new Promise(r => setTimeout(r, 800));
+        // 4. Robustly wait for session to persist
+        const checkSession = async (retryCount = 0): Promise<any> => {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) return session;
+
+          if (retryCount < 8) { // Wait up to ~5 seconds total
+            await new Promise(r => setTimeout(r, 600));
             return checkSession(retryCount + 1);
           }
-
-          if (error) console.error('Last session check error:', error);
           return null;
         };
 
@@ -65,17 +82,17 @@ export default function SetupPasswordPage() {
 
         if (!session) {
           console.error('All session detection attempts failed');
-          setError('No se pudo detectar tu sesión de invitación. Por favor, asegúrate de haber hecho clic en el enlace más reciente o intenta abrir el enlace en una pestaña de incógnito.');
+          setError('No se pudo detectar tu sesión. Por favor, asegúrate de usar el enlace más reciente que recibiste. Si persiste, intenta copiar y pegar el enlace directamente en una ventana nueva de incógnito.');
           setLoading(false);
           return;
         }
 
-        // 3. User is authenticated
+        console.log('User authenticated successfully');
         setIsReady(true);
         setLoading(false);
       } catch (err: any) {
         console.error('Unexpected error in auth flow:', err);
-        setError('Error crítico al procesar la autenticación: ' + (err.message || 'Error desconocido'));
+        setError('Error al procesar la autenticación');
         setLoading(false);
       }
     };
@@ -167,51 +184,75 @@ export default function SetupPasswordPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-gray-900">Configura tu Contraseña</CardTitle>
           <CardDescription className="text-gray-600">
-            Crea una contraseña segura para acceder a tu cuenta
+            {isReady
+              ? 'Crea una contraseña segura para acceder a tu cuenta'
+              : 'Verificando tu cuenta...'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-900">
-                Nueva Contraseña
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Mínimo 8 caracteres"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                disabled={loading}
-                className="text-gray-900 bg-white border-gray-300"
-              />
-            </div>
+          {isReady ? (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-gray-900">
+                  Nueva Contraseña
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Mínimo 8 caracteres"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  disabled={loading}
+                  className="text-gray-900 bg-white border-gray-300"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-gray-900">
-                Confirmar Contraseña
-              </Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Confirma tu contraseña"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={8}
-                disabled={loading}
-                className="text-gray-900 bg-white border-gray-300"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-gray-900">
+                  Confirmar Contraseña
+                </Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Confirma tu contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  disabled={loading}
+                  className="text-gray-900 bg-white border-gray-300"
+                />
+              </div>
 
-            {error && (
-              <div className="space-y-4">
+              {error && (
                 <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800 border border-red-200">
                   {error}
                 </div>
-                {!isReady && (
+              )}
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? 'Estableciendo contraseña...' : 'Establecer Contraseña'}
+              </Button>
+
+              <div className="text-center text-sm text-gray-600">
+                <p className="mt-2">
+                  Una vez establecida tu contraseña, podrás acceder al sistema.
+                </p>
+              </div>
+            </form>
+          ) : (
+            <div className="space-y-4 py-4">
+              {error ? (
+                <div className="space-y-4">
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800 border border-red-200">
+                    {error}
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
@@ -220,24 +261,15 @@ export default function SetupPasswordPage() {
                   >
                     Regresar al Inicio de Sesión
                   </Button>
-                )}
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? 'Estableciendo contraseña...' : 'Establecer Contraseña'}
-            </Button>
-
-            <div className="text-center text-sm text-gray-600">
-              <p className="mt-2">
-                Una vez establecida tu contraseña, podrás acceder al sistema.
-              </p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center space-y-4">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+                  <p className="text-sm text-gray-600">Detectando autenticación...</p>
+                </div>
+              )}
             </div>
-          </form>
+          )}
         </CardContent>
       </Card>
     </div>
