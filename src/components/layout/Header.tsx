@@ -3,7 +3,7 @@
 import { User, LogOut } from 'lucide-react'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { useRole } from '@/contexts/RoleContext'
-import { getRoleDisplayName } from '@/utils/roles'
+import { UserRole } from '@/types/roles'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -17,7 +17,19 @@ export function Header({ userEmail }: { userEmail?: string }) {
         ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
         : userEmail || 'Usuario'
 
-    const roleLabel = userRole ? getRoleDisplayName(userRole) : 'Usuario'
+    // Get role display name locally (client-side)
+    const getRoleLabel = (role: UserRole | null): string => {
+        if (!role) return 'Usuario'
+        const labels: Record<UserRole, string> = {
+            [UserRole.ADMIN]: 'Administrador',
+            [UserRole.THERAPIST]: 'Fisioterapeuta',
+            [UserRole.RECEPTIONIST]: 'Recepcionista',
+            [UserRole.PATIENT]: 'Paciente',
+        }
+        return labels[role] || 'Usuario'
+    }
+
+    const roleLabel = getRoleLabel(userRole)
 
     const handleLogout = async () => {
         try {
