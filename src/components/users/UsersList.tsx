@@ -32,74 +32,28 @@ export default function UsersList() {
     setError(null);
 
     try {
-      const supabase = createClient();
+      // Call API endpoint to get users
+      const response = await fetch('/api/users/list');
 
-      // Get all users from user_roles table joined with auth.users
-      const { data: userRolesData, error: userRolesError } = await supabase
-        .from('user_roles')
-        .select(`
-          user_id,
-          roles (
-            name
-          )
-        `);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al cargar usuarios');
+      }
 
-      if (userRolesError) throw userRolesError;
+      const { users: usersData } = await response.json();
 
-      // Create a map of user_id to role
-      const userRolesMap = new Map<string, UserRole>();
-      userRolesData?.forEach((ur: any) => {
-        if (ur.roles?.name) {
-          userRolesMap.set(ur.user_id, ur.roles.name as UserRole);
-        }
-      });
-
-      // Get user data from therapists and patients tables
-      const { data: therapistsData } = await supabase
-        .from('therapists')
-        .select('auth_user_id, first_name, last_name, email, created_at, role')
-        .not('auth_user_id', 'is', null);
-
-      const { data: patientsData } = await supabase
-        .from('patients')
-        .select('auth_user_id, first_name, last_name, email, created_at')
-        .not('auth_user_id', 'is', null);
-
-      // Combine data
-      const allUsers: UserListItem[] = [];
-
-      // Add therapists
-      therapistsData?.forEach((therapist: any) => {
-        allUsers.push({
-          id: therapist.auth_user_id,
-          email: therapist.email,
-          created_at: therapist.created_at,
-          user_metadata: {
-            first_name: therapist.first_name,
-            last_name: therapist.last_name,
-            role: therapist.role || userRolesMap.get(therapist.auth_user_id),
-          },
-          role: therapist.role || userRolesMap.get(therapist.auth_user_id),
-        });
-      });
-
-      // Add patients
-      patientsData?.forEach((patient: any) => {
-        allUsers.push({
-          id: patient.auth_user_id,
-          email: patient.email,
-          created_at: patient.created_at,
-          user_metadata: {
-            first_name: patient.first_name,
-            last_name: patient.last_name,
-            role: userRolesMap.get(patient.auth_user_id),
-          },
-          role: userRolesMap.get(patient.auth_user_id),
-        });
-      });
-
-      // Sort by creation date (newest first)
-      allUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      // Transform data to match UserListItem interface
+      const allUsers: UserListItem[] = usersData.map((user: any) => ({
+        id: user.id,
+        email: user.email,
+        created_at: user.created_at,
+        user_metadata: {
+          first_name: user.first_name,
+          last_name: user.last_name,
+          role: user.role as UserRole,
+        },
+        role: user.role as UserRole,
+      }));
 
       setUsers(allUsers);
     } catch (err: any) {
