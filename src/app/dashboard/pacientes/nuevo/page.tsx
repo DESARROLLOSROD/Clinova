@@ -18,17 +18,30 @@ export default function NewPatientPage() {
         setError(null)
         const supabase = createClient()
 
-        const formData = new FormData(e.currentTarget)
-        const patientData = {
-            first_name: formData.get('first_name') as string,
-            last_name: formData.get('last_name') as string,
-            email: formData.get('email') as string,
-            phone: formData.get('phone') as string,
-            date_of_birth: formData.get('date_of_birth') as string || null,
-            active: true
-        }
-
         try {
+            // Get current user and their clinic_id
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) throw new Error('No autenticado')
+
+            const { data: profile } = await supabase
+                .from('user_profiles')
+                .select('clinic_id')
+                .eq('id', user.id)
+                .single()
+
+            if (!profile?.clinic_id) throw new Error('No se encontró la clínica del usuario')
+
+            const formData = new FormData(e.currentTarget)
+            const patientData = {
+                first_name: formData.get('first_name') as string,
+                last_name: formData.get('last_name') as string,
+                email: formData.get('email') as string,
+                phone: formData.get('phone') as string,
+                date_of_birth: formData.get('date_of_birth') as string || null,
+                clinic_id: profile.clinic_id,
+                active: true
+            }
+
             const { error } = await supabase.from('patients').insert([patientData])
             if (error) throw error
 
