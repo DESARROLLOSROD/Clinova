@@ -2,14 +2,15 @@
 
 import { User, LogOut } from 'lucide-react'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
-import { useRole } from '@/contexts/RoleContext'
+import { useUser } from '@/contexts/UserContext'
 import { UserRole } from '@/types/roles'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 export function Header({ userEmail }: { userEmail?: string }) {
-    const { userRole, user } = useRole()
+    const { profile, user } = useUser()
+    const userRole = profile?.role as UserRole | undefined
     const router = useRouter()
     const [isLoggingOut, setIsLoggingOut] = useState(false)
 
@@ -29,7 +30,7 @@ export function Header({ userEmail }: { userEmail?: string }) {
         return labels[role] || 'Usuario'
     }
 
-    const roleLabel = getRoleLabel(userRole)
+    const roleLabel = getRoleLabel(userRole || null)
 
     const handleLogout = async () => {
         try {
