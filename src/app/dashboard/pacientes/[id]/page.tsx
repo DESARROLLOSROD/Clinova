@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PatientActions } from '@/components/patients/PatientActions';
 import { MedicalHistorySection } from '@/components/patients/MedicalHistorySection';
 import { PatientPrescriptionsView } from '@/components/patients/PatientPrescriptionsView';
+import { PatientConsentsSection } from '@/components/patients/PatientConsentsSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -158,9 +159,8 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
               <div>
                 <span className="text-gray-500">Estado:</span>
                 <span
-                  className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    patient.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}
+                  className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${patient.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}
                 >
                   {patient.active ? 'Activo' : 'Inactivo'}
                 </span>
@@ -193,6 +193,8 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
       </div>
 
       <MedicalHistorySection patientId={patient.id} />
+
+      <PatientConsentsSection patientId={patient.id} />
 
       <PatientPrescriptionsView patientId={patient.id} />
 
@@ -227,9 +229,8 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
                       </p>
                     </div>
                     <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        appointmentStatusColors[appointment.status]
-                      }`}
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${appointmentStatusColors[appointment.status]
+                        }`}
                     >
                       {statusLabels[appointment.status]}
                     </span>
@@ -276,9 +277,8 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
                       )}
                     </div>
                     <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        paymentStatusColors[payment.status]
-                      }`}
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${paymentStatusColors[payment.status]
+                        }`}
                     >
                       {statusLabels[payment.status]}
                     </span>

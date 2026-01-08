@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { Dumbbell, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { Dumbbell, Calendar, CheckCircle, XCircle, Plus, Send, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { PrescriptionForm } from '@/components/exercises/PrescriptionForm';
+import { toast } from 'sonner';
 
 interface PatientPrescriptionsViewProps {
   patientId: string;
@@ -33,6 +36,7 @@ export function PatientPrescriptionsView({ patientId }: PatientPrescriptionsView
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'paused' | 'completed'>('active');
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     fetchPrescriptions();
@@ -76,6 +80,36 @@ export function PatientPrescriptionsView({ patientId }: PatientPrescriptionsView
     completed: 'bg-blue-100 text-blue-800',
   };
 
+  const handleShareWhatsApp = (p: Prescription) => {
+    const message = `🏋️ *Tu Plan de Ejercicios Clinova*\n\n` +
+      `*Ejercicio:* ${p.exercise_library.name}\n` +
+      `${p.sets ? `*Series:* ${p.sets}\n` : ''}` +
+      `${p.repetitions ? `*Reps:* ${p.repetitions}\n` : ''}` +
+      `${p.duration_minutes ? `*Duración:* ${p.duration_minutes} min\n` : ''}` +
+      `${p.frequency_per_week ? `*Frecuencia:* ${p.frequency_per_week} veces/semana\n` : ''}` +
+      `${p.instructions ? `\n*Instrucciones:* ${p.instructions}\n` : ''}` +
+      `\n¡Mucho ánimo con tu recuperación! 💪`;
+
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta prescripción?')) return;
+
+    const { error } = await supabase
+      .from('patient_exercise_prescriptions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Error al eliminar');
+    } else {
+      toast.success('Eliminado');
+      fetchPrescriptions();
+    }
+  };
+
   const statusLabels: Record<string, string> = {
     active: 'Activo',
     paused: 'Pausado',
@@ -110,38 +144,55 @@ export function PatientPrescriptionsView({ patientId }: PatientPrescriptionsView
           Ejercicios Prescritos
         </h2>
         <div className="flex gap-2">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-3 py-1 text-xs rounded-full ${
-              filter === 'all'
-                ? 'bg-gray-800 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            Todos ({prescriptions.length})
-          </button>
-          <button
-            onClick={() => setFilter('active')}
-            className={`px-3 py-1 text-xs rounded-full ${
-              filter === 'active'
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            Activos ({prescriptions.filter((p) => p.status === 'active').length})
-          </button>
-          <button
-            onClick={() => setFilter('completed')}
-            className={`px-3 py-1 text-xs rounded-full ${
-              filter === 'completed'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            Completados ({prescriptions.filter((p) => p.status === 'completed').length})
-          </button>
+          <Button onClick={() => setIsAdding(true)} size="sm" className="gap-2">
+            <Plus size={16} />
+            Prescribir
+          </Button>
+          <div className="hidden sm:flex gap-2 ml-4">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-3 py-1 text-xs rounded-full ${filter === 'all'
+                  ? 'bg-gray-800 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setFilter('active')}
+              className={`px-3 py-1 text-xs rounded-full ${filter === 'active'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+            >
+              Activos
+            </button>
+          </div>
         </div>
       </div>
+
+      {isAdding && (
+        <div className="mb-8 p-6 bg-slate-50 rounded-xl border-2 border-dashed border-blue-200">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-blue-800 flex items-center gap-2">
+              <Plus className="bg-blue-600 text-white rounded-full p-1" size={24} />
+              Nueva Prescripción Médica
+            </h3>
+            <Button variant="ghost" size="sm" onClick={() => setIsAdding(false)}>
+              Cerrar
+            </Button>
+          </div>
+          <PrescriptionForm
+            patientId={patientId}
+            onSuccess={() => {
+              setIsAdding(false);
+              fetchPrescriptions();
+              toast.success('Ejercicios asignados correctamente');
+            }}
+            onCancel={() => setIsAdding(false)}
+          />
+        </div>
+      )}
 
       {filteredPrescriptions.length === 0 ? (
         <div className="text-center py-12">
@@ -182,9 +233,8 @@ export function PatientPrescriptionsView({ patientId }: PatientPrescriptionsView
                     )}
                     {prescription.exercise_library.difficulty && (
                       <span
-                        className={`text-xs px-2 py-1 rounded border ${
-                          difficultyColors[prescription.exercise_library.difficulty]
-                        }`}
+                        className={`text-xs px-2 py-1 rounded border ${difficultyColors[prescription.exercise_library.difficulty]
+                          }`}
                       >
                         {difficultyLabels[prescription.exercise_library.difficulty]}
                       </span>
@@ -192,9 +242,8 @@ export function PatientPrescriptionsView({ patientId }: PatientPrescriptionsView
                   </div>
                 </div>
                 <span
-                  className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                    statusColors[prescription.status]
-                  }`}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full ${statusColors[prescription.status]
+                    }`}
                 >
                   {statusLabels[prescription.status]}
                 </span>
@@ -251,6 +300,26 @@ export function PatientPrescriptionsView({ patientId }: PatientPrescriptionsView
                     <span>Fin: {new Date(prescription.end_date).toLocaleDateString('es-ES')}</span>
                   </div>
                 )}
+              </div>
+
+              <div className="mt-4 pt-3 border-t flex justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-green-600 hover:text-green-700 hover:bg-green-50 gap-2 border-green-200"
+                  onClick={() => handleShareWhatsApp(prescription)}
+                >
+                  <Send size={14} />
+                  Enviar por WhatsApp
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-400 hover:text-red-500"
+                  onClick={() => handleDelete(prescription.id)}
+                >
+                  <Trash2 size={14} />
+                </Button>
               </div>
             </div>
           ))}

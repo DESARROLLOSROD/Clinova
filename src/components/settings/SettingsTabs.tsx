@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ClinicSettingsForm } from './ClinicSettingsForm';
 import { ServicePricesList } from './ServicePricesList';
 import { NotificationTemplatesList } from './NotificationTemplatesList';
+import { AuditLogList } from './AuditLogList';
 
 interface SettingsTabsProps {
   initialSettings: any;
@@ -13,7 +14,7 @@ interface SettingsTabsProps {
   initialNotificationTemplates: any[];
 }
 
-type TabType = 'clinic' | 'services' | 'notifications';
+type TabType = 'clinic' | 'services' | 'notifications' | 'security';
 
 export function SettingsTabs({
   initialSettings,
@@ -26,6 +27,7 @@ export function SettingsTabs({
     { id: 'clinic' as TabType, label: 'Información de la Clínica', icon: '🏥' },
     { id: 'services' as TabType, label: 'Servicios y Precios', icon: '💰' },
     { id: 'notifications' as TabType, label: 'Notificaciones', icon: '📧' },
+    { id: 'security' as TabType, label: 'Seguridad y Auditoría', icon: '🛡️' },
   ];
 
   return (
@@ -39,10 +41,9 @@ export function SettingsTabs({
               onClick={() => setActiveTab(tab.id)}
               className={`
                 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ${activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }
               `}
             >
@@ -64,6 +65,7 @@ export function SettingsTabs({
             initialNotificationTemplates={initialNotificationTemplates}
           />
         )}
+        {activeTab === 'security' && <AuditLogList />}
       </div>
     </div>
   );

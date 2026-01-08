@@ -8,7 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Edit, Save } from 'lucide-react';
+import { Edit, Save, Activity } from 'lucide-react';
+import { BodyMap, type BodyMark } from '@/components/shared/BodyMap';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 interface SessionEditFormProps {
   session: any;
@@ -19,6 +22,29 @@ export function SessionEditForm({ session }: SessionEditFormProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [marks, setMarks] = useState<BodyMark[]>([]);
+  const [initialMarksLoaded, setInitialMarksLoaded] = useState(false);
+
+  useEffect(() => {
+    if (isEditing && !initialMarksLoaded) {
+      fetchBodyMarks();
+    }
+  }, [isEditing, initialMarksLoaded]);
+
+  const fetchBodyMarks = async () => {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('session_body_marks')
+      .select('*')
+      .eq('session_id', session.id);
+
+    if (error) {
+      console.error('Error fetching body marks:', error);
+    } else {
+      setMarks(data || []);
+      setInitialMarksLoaded(true);
+    }
+  };
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -38,10 +64,39 @@ export function SessionEditForm({ session }: SessionEditFormProps) {
     };
 
     try {
-      const { error } = await supabase.from('sessions').update(updatedData).eq('id', session.id);
+      // 1. Actualizar datos de la sesión (SOAP)
+      const { error: sessionError } = await supabase.from('sessions').update(updatedData).eq('id', session.id);
+      if (sessionError) throw sessionError;
 
-      if (error) throw error;
+      // 2. Actualizar marcas del mapa corporal
+      // Primero borramos las anteriores (simplificación técnica de sincronización)
+      const { error: deleteError } = await supabase
+        .from('session_body_marks')
+        .delete()
+        .eq('session_id', session.id);
 
+      if (deleteError) throw deleteError;
+
+      // Insertamos las nuevas (si las hay)
+      if (marks.length > 0) {
+        const marksToInsert = marks.map(m => ({
+          session_id: session.id,
+          patient_id: session.patient_id,
+          x_pos: m.x_pos,
+          y_pos: m.y_pos,
+          side: m.side,
+          mark_type: m.mark_type,
+          notes: m.notes
+        }));
+
+        const { error: insertError } = await supabase
+          .from('session_body_marks')
+          .insert(marksToInsert);
+
+        if (insertError) throw insertError;
+      }
+
+      toast.success('Sesión actualizada correctamente');
       setIsEditing(false);
       router.refresh();
     } catch (err: any) {
@@ -113,6 +168,20 @@ export function SessionEditForm({ session }: SessionEditFormProps) {
             <p className="text-xs text-gray-500 mt-1">
               Observaciones clínicas, mediciones y hallazgos objetivos
             </p>
+          </div>
+
+          <div className="border-y py-6 bg-slate-50/50 -mx-6 px-6">
+            <h3 className="text-lg font-medium flex items-center gap-2 mb-4">
+              <Activity className="text-blue-600" size={20} />
+              Evaluación Visual del Cuerpo
+            </h3>
+            <p className="text-sm text-slate-500 mb-4">
+              Marca los puntos de dolor, tensión o lesiones detectadas en la sesión.
+            </p>
+            <BodyMap
+              onMarksChange={setMarks}
+              initialMarks={marks}
+            />
           </div>
 
           <div>
