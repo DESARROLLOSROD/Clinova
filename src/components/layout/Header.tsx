@@ -36,13 +36,25 @@ export function Header({ userEmail }: { userEmail?: string }) {
         try {
             setIsLoggingOut(true)
             const supabase = createClient()
-            await supabase.auth.signOut()
-            router.push('/login')
-            router.refresh()
+
+            // Set a timeout for the signout process just in case
+            const logoutPromise = supabase.auth.signOut()
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Logout timed out')), 3000)
+            )
+
+            try {
+                await Promise.race([logoutPromise, timeoutPromise])
+            } catch (err) {
+                console.warn('Logout timed out or failed, proceeding with local cleanup:', err)
+            }
+
+            // Always redirect and refresh to be sure
+            window.location.href = '/login'
         } catch (error) {
             console.error('Error al cerrar sesión:', error)
-        } finally {
-            setIsLoggingOut(false)
+            // Fallback redirect
+            window.location.href = '/login'
         }
     }
 

@@ -95,10 +95,47 @@ export function Sidebar() {
     const pathname = usePathname()
     const { can, loading, profile } = useUser()
 
-    if (loading || !profile) {
+    if (loading) {
         return (
             <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
-                <div className="px-3 py-2 text-sm text-gray-500">Cargando...</div>
+                <div className="px-6 py-8">
+                    <div className="flex items-center gap-2 mb-8 animate-pulse">
+                        <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
+                        <div className="h-6 w-24 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="space-y-4">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse"></div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!profile) {
+        return (
+            <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
+                <div className="flex h-16 items-center px-6 border-b border-gray-100">
+                    <div className="flex items-center gap-2 font-semibold text-xl text-gray-900">
+                        <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <Stethoscope className="h-5 w-5 text-white" />
+                        </div>
+                        <span>Clinova</span>
+                    </div>
+                </div>
+                <div className="px-6 py-8">
+                    <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+                        <p className="text-sm font-medium text-red-800">Error de Perfil</p>
+                        <p className="mt-1 text-xs text-red-600">No se pudo cargar tu perfil. Contacta soporte.</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-3 text-xs font-bold text-red-700 hover:underline"
+                        >
+                            Reintentar
+                        </button>
+                    </div>
+                </div>
             </div>
         );
     }
