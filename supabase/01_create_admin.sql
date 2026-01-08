@@ -1,7 +1,11 @@
 -- ============================================================================
--- CONFIRMAR EMAIL Y CREAR ADMIN - TODO EN UNO
+-- CREAR USUARIO ADMINISTRADOR
 -- ============================================================================
--- Este script confirma el email del usuario y lo convierte en admin
+-- Este script crea un usuario administrador para Clinova
+--
+-- PASOS:
+-- 1. Primero crea el usuario en Supabase Dashboard → Authentication → Users → Invite user
+-- 2. Luego ejecuta este script reemplazando el email en la línea 21
 -- ============================================================================
 
 DO $$
@@ -10,6 +14,7 @@ DECLARE
     v_clinic_id UUID;
     v_user_email TEXT := 'admin@clinova.com'; -- ⚠️ CAMBIAR ESTE EMAIL
     v_full_name TEXT := 'Administrador Principal'; -- ⚠️ CAMBIAR NOMBRE
+    v_clinic_name TEXT := 'Clínica Principal'; -- ⚠️ CAMBIAR NOMBRE DE CLÍNICA
 BEGIN
     -- Buscar el user_id del email
     SELECT id INTO v_user_id
@@ -17,21 +22,13 @@ BEGIN
     WHERE email = v_user_email;
 
     IF v_user_id IS NULL THEN
-        RAISE EXCEPTION 'Usuario con email % no encontrado. Primero créalo en Authentication → Users → Add user', v_user_email;
+        RAISE EXCEPTION 'Usuario con email % no encontrado. Primero créalo en Authentication → Users → Invite user', v_user_email;
     END IF;
 
-    -- PASO 1: Confirmar el email del usuario
-    UPDATE auth.users
-    SET
-        email_confirmed_at = NOW()
-    WHERE id = v_user_id;
-
-    RAISE NOTICE '✅ Email confirmado';
-
-    -- PASO 2: Obtener o crear la clínica principal
+    -- Obtener o crear la clínica principal
     SELECT id INTO v_clinic_id
     FROM public.clinics
-    ORDER BY created_at
+    WHERE email = v_user_email
     LIMIT 1;
 
     IF v_clinic_id IS NULL THEN
@@ -45,8 +42,8 @@ BEGIN
             is_active
         )
         VALUES (
-            'Clínica Principal',
-            'clinica-principal',
+            v_clinic_name,
+            lower(regexp_replace(v_clinic_name, '[^a-zA-Z0-9]', '-', 'g')),
             v_user_email,
             'professional',
             'active',
@@ -54,10 +51,10 @@ BEGIN
         )
         RETURNING id INTO v_clinic_id;
 
-        RAISE NOTICE '✅ Clínica principal creada con ID: %', v_clinic_id;
+        RAISE NOTICE '✅ Clínica creada: %', v_clinic_name;
     END IF;
 
-    -- PASO 3: Crear o actualizar el perfil del usuario
+    -- Crear o actualizar el perfil del usuario
     INSERT INTO public.user_profiles (
         id,
         role,
@@ -79,7 +76,7 @@ BEGIN
         full_name = v_full_name,
         is_active = true;
 
-    -- PASO 4: Actualizar metadata del usuario en auth.users
+    -- Actualizar metadata del usuario en auth.users
     UPDATE auth.users
     SET
         raw_user_meta_data = jsonb_set(
@@ -95,41 +92,32 @@ BEGIN
     WHERE id = v_user_id;
 
     RAISE NOTICE '';
-    RAISE NOTICE '========================================';
-    RAISE NOTICE '✅ ¡Usuario administrador listo!';
-    RAISE NOTICE '========================================';
+    RAISE NOTICE '✅ ¡Usuario administrador creado exitosamente!';
     RAISE NOTICE '';
     RAISE NOTICE '📧 Email: %', v_user_email;
     RAISE NOTICE '👤 Nombre: %', v_full_name;
+    RAISE NOTICE '🏥 Clínica: %', v_clinic_name;
     RAISE NOTICE '🆔 User ID: %', v_user_id;
     RAISE NOTICE '🏥 Clinic ID: %', v_clinic_id;
     RAISE NOTICE '🎯 Rol: admin';
-    RAISE NOTICE '✉️  Email: CONFIRMADO';
     RAISE NOTICE '';
     RAISE NOTICE '🔑 Ahora puedes iniciar sesión con este usuario';
-    RAISE NOTICE '';
 END $$;
 
 -- ============================================================================
--- VERIFICAR QUE TODO ESTÁ CORRECTO
+-- VERIFICAR USUARIO CREADO
 -- ============================================================================
 
 SELECT
     u.id,
     u.email,
-    u.email_confirmed_at,
-    u.confirmed_at,
     up.full_name,
     up.role,
     c.name as clinic_name,
     up.is_active,
-    u.raw_user_meta_data->>'role' as metadata_role,
-    CASE
-        WHEN u.email_confirmed_at IS NOT NULL THEN '✅ Confirmado'
-        ELSE '❌ No confirmado'
-    END as email_status
+    u.created_at
 FROM auth.users u
 LEFT JOIN public.user_profiles up ON up.id = u.id
 LEFT JOIN public.clinics c ON c.id = up.clinic_id
-WHERE u.email = 'admin@clinova.com' -- ⚠️ CAMBIAR EMAIL
+WHERE u.email = 'admin@clinova.com' -- ⚠️ CAMBIAR EMAIL PARA VERIFICAR
 ORDER BY u.created_at DESC;
