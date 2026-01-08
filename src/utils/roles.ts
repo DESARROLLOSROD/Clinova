@@ -16,6 +16,18 @@ export async function getCurrentUserRole(): Promise<UserRole | null> {
 
   if (!user) return null;
 
+  // First try to get role from user_profiles table
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.role) {
+    return profile.role as UserRole;
+  }
+
+  // Fallback to metadata
   return getUserRole(user);
 }
 

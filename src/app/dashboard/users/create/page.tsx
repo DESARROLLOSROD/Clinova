@@ -27,22 +27,7 @@ export default async function CreateUserPage() {
         </p>
       </div>
 
-      <CreateUserForm
-        hideRoleSelection={!adminAccess} // Only admins can choose role
-        onSuccess={(userId, role) => {
-          // Redirect based on role
-          if (role === 'therapist') {
-            window.location.href = '/dashboard/therapists';
-          } else if (role === 'patient') {
-            window.location.href = '/dashboard/patients';
-          } else {
-            window.location.href = '/dashboard/users';
-          }
-        }}
-        onCancel={() => {
-          window.history.back();
-        }}
-      />
+      <CreateUserForm hideRoleSelection={!adminAccess} />
     </div>
   );
 }
