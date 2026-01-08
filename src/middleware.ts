@@ -3,11 +3,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-    const { supabase, response } = await updateSession(request)
+    const { supabase, user, response } = await updateSession(request)
 
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    // If updateSession already returned a redirect, stop here
+    if (response.headers.get('location')) {
+        return response
+    }
 
     const publicPaths = ['/login', '/signup', '/reset-password']
     const isPublicPath = publicPaths.some((path) => request.nextUrl.pathname.startsWith(path))

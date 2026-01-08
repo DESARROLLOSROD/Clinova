@@ -91,16 +91,16 @@ export async function updateSession(request: NextRequest) {
 
     // Redirect unauthenticated users to login
     if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-        return NextResponse.redirect(getRedirectUrl('/login'))
+        return { supabase, user, response: NextResponse.redirect(getRedirectUrl('/login')) }
     }
 
     if (request.nextUrl.pathname === '/' && !user) {
-        return NextResponse.redirect(getRedirectUrl('/login'))
+        return { supabase, user, response: NextResponse.redirect(getRedirectUrl('/login')) }
     }
 
     // Redirect authenticated users away from login
     if (request.nextUrl.pathname.startsWith('/login') && user) {
-        return NextResponse.redirect(getRedirectUrl('/dashboard'))
+        return { supabase, user, response: NextResponse.redirect(getRedirectUrl('/dashboard')) }
     }
 
     // Role-based route protection
@@ -111,7 +111,7 @@ export async function updateSession(request: NextRequest) {
         const adminOnlyRoutes = ['/dashboard/users']
         if (adminOnlyRoutes.some(route => pathname.startsWith(route))) {
             if (userRole !== UserRole.ADMIN) {
-                return NextResponse.redirect(getRedirectUrl('/dashboard'))
+                return { supabase, user, response: NextResponse.redirect(getRedirectUrl('/dashboard')) }
             }
         }
 
@@ -119,24 +119,24 @@ export async function updateSession(request: NextRequest) {
         const staffOnlyRoutes = ['/dashboard/users/create']
         if (staffOnlyRoutes.some(route => pathname.startsWith(route))) {
             if (userRole !== UserRole.ADMIN && userRole !== UserRole.RECEPTIONIST) {
-                return NextResponse.redirect(getRedirectUrl('/dashboard'))
+                return { supabase, user, response: NextResponse.redirect(getRedirectUrl('/dashboard')) }
             }
         }
 
         // Therapist management (admin only)
         if (pathname.startsWith('/dashboard/fisioterapeutas') && pathname !== '/dashboard/fisioterapeutas') {
             if (userRole !== UserRole.ADMIN) {
-                return NextResponse.redirect(getRedirectUrl('/dashboard'))
+                return { supabase, user, response: NextResponse.redirect(getRedirectUrl('/dashboard')) }
             }
         }
 
         // Configuration (admin only)
         if (pathname.startsWith('/dashboard/configuracion')) {
             if (userRole !== UserRole.ADMIN) {
-                return NextResponse.redirect(getRedirectUrl('/dashboard'))
+                return { supabase, user, response: NextResponse.redirect(getRedirectUrl('/dashboard')) }
             }
         }
     }
 
-    return response
+    return { supabase, user, response }
 }
