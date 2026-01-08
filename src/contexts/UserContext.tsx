@@ -42,8 +42,8 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
 interface UserProviderProps {
-    children: React.ReactNode;
-    initialProfile?: UserProfile | null;
+  children: React.ReactNode;
+  initialProfile?: UserProfile | null;
 }
 
 export function UserProvider({ children, initialProfile = null }: UserProviderProps) {
@@ -77,42 +77,51 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
 
   useEffect(() => {
     const getUserProfile = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+
         if (user) {
-            setUser(user);
-            if (!initialProfile) {
-                const profileData = await fetchProfile(user.id);
-                setProfile(profileData);
-            }
+          setUser(user);
+          if (!initialProfile) {
+            const profileData = await fetchProfile(user.id);
+            setProfile(profileData);
+          }
         }
+      } catch (error) {
+        console.error('Error in getUserProfile:', error);
+      } finally {
         setLoading(false);
+      }
     };
 
     if (!initialProfile) {
-        getUserProfile();
+      getUserProfile();
+    } else {
+      setLoading(false);
     }
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-            const profileData = await fetchProfile(session.user.id);
-            setProfile(profileData);
-            if (event === 'SIGNED_IN') {
-                await supabase
-                    .from('user_profiles')
-                    .update({ last_login_at: new Date().toISOString() })
-                    .eq('id', session.user.id);
-            }
-        } else {
-            setProfile(null);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        const profileData = await fetchProfile(session.user.id);
+        setProfile(profileData);
+        if (event === 'SIGNED_IN') {
+          await supabase
+            .from('user_profiles')
+            .update({ last_login_at: new Date().toISOString() })
+            .eq('id', session.user.id);
         }
-        setLoading(false);
+      } else {
+        setProfile(null);
+      }
+      setLoading(false);
     });
 
     return () => {
-        authListener.subscription.unsubscribe();
+      authListener.subscription.unsubscribe();
     };
-}, [initialProfile]);
+  }, [initialProfile]);
 
 
   const isAdmin = profile?.role === 'admin'
@@ -138,7 +147,7 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
     refreshProfile,
   }
 
-  return <UserContext.Provider value={value}>{!loading && children}</UserContext.Provider>
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>
 }
 
 export function useUser() {
