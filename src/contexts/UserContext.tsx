@@ -4,7 +4,8 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
 
-export type UserRole = 'admin' | 'therapist' | 'receptionist' | 'patient'
+export type UserRole = 'super_admin' | 'clinic_manager' | 'therapist' | 'receptionist' | 'patient'
+
 
 export interface UserProfile {
   id: string
@@ -31,13 +32,16 @@ interface UserContextType {
   user: User | null
   profile: UserProfile | null
   loading: boolean
-  isAdmin: boolean
+  isSuperAdmin: boolean
+  isClinicManager: boolean
+  isAdmin: boolean  // true if super_admin OR clinic_manager
   isTherapist: boolean
   isReceptionist: boolean
   isPatient: boolean
   can: (permission: Permission) => boolean
   refreshProfile: () => Promise<void>
 }
+
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
@@ -124,14 +128,22 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
   }, [initialProfile]);
 
 
-  const isAdmin = profile?.role === 'admin'
+  const isSuperAdmin = profile?.role === 'super_admin'
+  const isClinicManager = profile?.role === 'clinic_manager'
+  const isAdmin = isSuperAdmin || isClinicManager  // Either super_admin or clinic_manager
   const isTherapist = profile?.role === 'therapist'
   const isReceptionist = profile?.role === 'receptionist'
   const isPatient = profile?.role === 'patient'
 
   const can = (permission: Permission): boolean => {
     if (!profile) return false
-    if (isAdmin) return true
+    if (isSuperAdmin) return true  // Super admin has all permissions
+    if (isClinicManager) {
+      // Clinic manager has all permissions except clinic management
+      const clinicManagementPerms = ['clinic:view:all', 'clinic:create', 'clinic:update:all', 'clinic:delete', 'clinic:view:analytics']
+      if (clinicManagementPerms.includes(permission)) return false
+      return true
+    }
     return permissions[profile.role]?.includes(permission) ?? false
   }
 
@@ -139,6 +151,8 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
     user,
     profile,
     loading,
+    isSuperAdmin,
+    isClinicManager,
     isAdmin,
     isTherapist,
     isReceptionist,
@@ -186,7 +200,8 @@ export type Permission =
   | 'clinic:configure'
 
 const permissions: Record<UserRole, Permission[]> = {
-  admin: [], // Admin can do everything, handled by the 'can' function directly
+  super_admin: [], // Super admin handled in 'can' function directly
+  clinic_manager: [], // Clinic manager handled in 'can' function directly
   therapist: [
     'patients:view',
     'patients:create',
@@ -220,3 +235,4 @@ const permissions: Record<UserRole, Permission[]> = {
     'payments:view_own',
   ],
 }
+

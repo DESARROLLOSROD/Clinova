@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
     if (user) {
         const { data: profile } = await supabase
             .from('user_profiles')
-            .select('role, is_active')
+            .select('role, is_active, clinic_id')
             .eq('id', user.id)
             .single()
 
@@ -48,16 +48,36 @@ export async function middleware(request: NextRequest) {
             return redirect('/account-suspended')
         }
 
+        // Super Admin routing
+        if (profile?.role === 'super_admin') {
+            // Super admin trying to access regular dashboard -> redirect to super admin dashboard
+            if (request.nextUrl.pathname === '/dashboard' || request.nextUrl.pathname.startsWith('/dashboard/')) {
+                if (!request.nextUrl.pathname.startsWith('/super-admin')) {
+                    return redirect('/super-admin/dashboard')
+                }
+            }
+        }
+
+        // Patient routing (redirect to their exercises page)
         if (profile?.role === 'patient' && request.nextUrl.pathname.startsWith('/dashboard')) {
             if (!request.nextUrl.pathname.startsWith('/dashboard/mis-ejercicios')) {
                 return redirect('/dashboard/mis-ejercicios')
             }
         }
 
-        const adminOnlyPaths = ['/dashboard/usuarios', '/dashboard/configuracion', '/dashboard/audit-log']
+        // Super admin only paths
+        const superAdminPaths = ['/super-admin']
+        const isSuperAdminPath = superAdminPaths.some((path) => request.nextUrl.pathname.startsWith(path))
+
+        if (isSuperAdminPath && profile?.role !== 'super_admin') {
+            return redirect('/dashboard')
+        }
+
+        // Clinic manager and admin only paths (within their clinic)
+        const adminOnlyPaths = ['/dashboard/users', '/dashboard/configuracion', '/dashboard/audit-log']
         const isAdminOnlyPath = adminOnlyPaths.some((path) => request.nextUrl.pathname.startsWith(path))
 
-        if (isAdminOnlyPath && profile?.role !== 'admin') {
+        if (isAdminOnlyPath && !['super_admin', 'clinic_manager'].includes(profile?.role || '')) {
             return redirect('/dashboard')
         }
     }

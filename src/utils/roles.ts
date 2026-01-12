@@ -132,10 +132,25 @@ export async function getCurrentUserPermissions(): Promise<Permission[]> {
 }
 
 /**
- * Check if user is admin
+ * Check if user is super admin (platform owner)
+ */
+export async function isSuperAdmin(): Promise<boolean> {
+  return hasRole(UserRole.SUPER_ADMIN);
+}
+
+/**
+ * Check if user is clinic manager (clinic owner)
+ */
+export async function isClinicManager(): Promise<boolean> {
+  return hasRole(UserRole.CLINIC_MANAGER);
+}
+
+/**
+ * Check if user is admin (either super_admin or clinic_manager)
+ * @deprecated Use isSuperAdmin() or isClinicManager() for specific checks
  */
 export async function isAdmin(): Promise<boolean> {
-  return hasRole(UserRole.ADMIN);
+  return hasAnyRole([UserRole.SUPER_ADMIN, UserRole.CLINIC_MANAGER]);
 }
 
 /**
@@ -160,10 +175,28 @@ export async function isPatient(): Promise<boolean> {
 }
 
 /**
- * Check if user has staff role (admin or receptionist)
+ * Check if user has staff role (clinic_manager or receptionist)
  */
 export async function isStaff(): Promise<boolean> {
-  return hasAnyRole([UserRole.ADMIN, UserRole.RECEPTIONIST]);
+  return hasAnyRole([UserRole.CLINIC_MANAGER, UserRole.RECEPTIONIST]);
+}
+
+/**
+ * Check if user can manage clinics (super admin only)
+ */
+export async function canManageClinics(): Promise<boolean> {
+  return hasAnyPermission([
+    Permission.CLINIC_CREATE,
+    Permission.CLINIC_UPDATE_ALL,
+    Permission.CLINIC_DELETE,
+  ]);
+}
+
+/**
+ * Check if user can view all clinics analytics
+ */
+export async function canViewPlatformAnalytics(): Promise<boolean> {
+  return hasPermission(Permission.CLINIC_VIEW_ANALYTICS);
 }
 
 /**
@@ -332,7 +365,8 @@ export async function assignRoleToUser(
  */
 export function getRoleDisplayName(role: UserRole): string {
   const displayNames: Record<UserRole, string> = {
-    [UserRole.ADMIN]: 'Administrador',
+    [UserRole.SUPER_ADMIN]: 'Super Administrador',
+    [UserRole.CLINIC_MANAGER]: 'Encargado de Clínica',
     [UserRole.THERAPIST]: 'Fisioterapeuta',
     [UserRole.RECEPTIONIST]: 'Recepcionista',
     [UserRole.PATIENT]: 'Paciente',

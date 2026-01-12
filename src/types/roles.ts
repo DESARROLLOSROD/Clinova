@@ -5,11 +5,13 @@
 
 // User Roles
 export enum UserRole {
-  ADMIN = 'admin',
-  THERAPIST = 'therapist',
-  RECEPTIONIST = 'receptionist',
-  PATIENT = 'patient',
+  SUPER_ADMIN = 'super_admin',      // Platform owner - can manage all clinics
+  CLINIC_MANAGER = 'clinic_manager', // Clinic owner - manages their specific clinic
+  THERAPIST = 'therapist',           // Physiotherapist - manages patients and sessions
+  RECEPTIONIST = 'receptionist',     // Front desk - manages appointments and payments
+  PATIENT = 'patient',               // Patient - views their own data
 }
+
 
 // Permission Categories
 export enum Permission {
@@ -84,12 +86,64 @@ export enum Permission {
   USER_CREATE = 'user:create',
   USER_UPDATE_ALL = 'user:update:all',
   USER_DELETE = 'user:delete',
+
+  // Clinic Management (Super Admin only)
+  CLINIC_VIEW_ALL = 'clinic:view:all',
+  CLINIC_CREATE = 'clinic:create',
+  CLINIC_UPDATE_ALL = 'clinic:update:all',
+  CLINIC_DELETE = 'clinic:delete',
+  CLINIC_VIEW_ANALYTICS = 'clinic:view:analytics',
 }
+
 
 // Role Permission Mapping
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  [UserRole.ADMIN]: [
-    // Full access to everything
+  [UserRole.SUPER_ADMIN]: [
+    // Super Admin has ALL permissions including clinic management
+    Permission.CLINIC_VIEW_ALL,
+    Permission.CLINIC_CREATE,
+    Permission.CLINIC_UPDATE_ALL,
+    Permission.CLINIC_DELETE,
+    Permission.CLINIC_VIEW_ANALYTICS,
+    Permission.THERAPIST_VIEW_ALL,
+    Permission.THERAPIST_CREATE,
+    Permission.THERAPIST_UPDATE_ALL,
+    Permission.THERAPIST_DELETE,
+    Permission.PATIENT_VIEW_ALL,
+    Permission.PATIENT_CREATE,
+    Permission.PATIENT_UPDATE_ALL,
+    Permission.PATIENT_DELETE,
+    Permission.APPOINTMENT_VIEW_ALL,
+    Permission.APPOINTMENT_CREATE,
+    Permission.APPOINTMENT_UPDATE_ALL,
+    Permission.APPOINTMENT_DELETE,
+    Permission.SESSION_VIEW_ALL,
+    Permission.SESSION_CREATE,
+    Permission.SESSION_UPDATE_ALL,
+    Permission.SESSION_DELETE,
+    Permission.PAYMENT_VIEW_ALL,
+    Permission.PAYMENT_CREATE,
+    Permission.PAYMENT_UPDATE_ALL,
+    Permission.PAYMENT_DELETE,
+    Permission.REPORT_VIEW_ALL,
+    Permission.REPORT_CREATE,
+    Permission.EXERCISE_VIEW,
+    Permission.EXERCISE_CREATE,
+    Permission.EXERCISE_UPDATE,
+    Permission.EXERCISE_DELETE,
+    Permission.TEMPLATE_VIEW,
+    Permission.TEMPLATE_CREATE,
+    Permission.TEMPLATE_UPDATE,
+    Permission.TEMPLATE_DELETE,
+    Permission.SETTINGS_VIEW,
+    Permission.SETTINGS_UPDATE,
+    Permission.USER_CREATE,
+    Permission.USER_UPDATE_ALL,
+    Permission.USER_DELETE,
+  ],
+
+  [UserRole.CLINIC_MANAGER]: [
+    // Clinic Manager has full access to their clinic (same as old ADMIN)
     Permission.THERAPIST_VIEW_ALL,
     Permission.THERAPIST_CREATE,
     Permission.THERAPIST_UPDATE_ALL,
@@ -209,6 +263,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.EXERCISE_VIEW,
   ],
 };
+
 
 // Type for user with role
 export interface UserWithRole {
