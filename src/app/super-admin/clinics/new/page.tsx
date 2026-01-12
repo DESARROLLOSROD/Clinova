@@ -45,10 +45,21 @@ export default function NewClinicPage() {
         setLoading(true)
 
         try {
-            // 1. Create clinic
-            const { data: clinic, error: clinicError } = await supabase
-                .from('clinics')
-                .insert({
+            // Get the current session token for authentication
+            const { data: { session } } = await supabase.auth.getSession()
+
+            if (!session?.access_token) {
+                throw new Error('No authenticated session found')
+            }
+
+            // Call the API route to create the clinic
+            const response = await fetch('/api/clinics/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
                     name: formData.name,
                     slug: formData.slug,
                     email: formData.email,
@@ -57,52 +68,20 @@ export default function NewClinicPage() {
                     state: formData.state,
                     country: formData.country,
                     subscription_tier: formData.subscription_tier,
-                    subscription_status: 'trial',
-                    trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-                    is_active: true,
-                })
-                .select()
-                .single()
-
-            if (clinicError) throw clinicError
-
-            // 2. Create manager user in Supabase Auth
-            const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-                email: formData.manager_email,
-                password: formData.manager_password,
-                email_confirm: true,
-                user_metadata: {
-                    full_name: formData.manager_name,
-                },
+                    manager_name: formData.manager_name,
+                    manager_email: formData.manager_email,
+                    manager_password: formData.manager_password,
+                }),
             })
 
-            if (authError) {
-                // Rollback clinic creation
-                await supabase.from('clinics').delete().eq('id', clinic.id)
-                throw authError
+            const result = await response.json()
+
+            if (!response.ok) {
+                throw new Error(result.error || result.details || 'Error al crear la clínica')
             }
 
-            // 3. Create user profile for manager
-            const { error: profileError } = await supabase
-                .from('user_profiles')
-                .insert({
-                    id: authData.user.id,
-                    role: 'clinic_manager',
-                    clinic_id: clinic.id,
-                    full_name: formData.manager_name,
-                    professional_title: 'Encargado de Clínica',
-                    is_active: true,
-                })
-
-            if (profileError) {
-                // Rollback
-                await supabase.auth.admin.deleteUser(authData.user.id)
-                await supabase.from('clinics').delete().eq('id', clinic.id)
-                throw profileError
-            }
-
-            toast.success('Clínica creada exitosamente')
-            router.push(`/super-admin/clinics/${clinic.id}`)
+            toast.success(result.message || 'Clínica creada exitosamente')
+            router.push(`/super-admin/clinics/${result.clinic.id}`)
         } catch (error: any) {
             console.error('Error creating clinic:', error)
             toast.error(error.message || 'Error al crear la clínica')
