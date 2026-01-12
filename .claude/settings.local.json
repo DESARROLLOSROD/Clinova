@@ -15,7 +15,8 @@
       "Bash(cat:*)",
       "Bash(du:*)",
       "Bash(git mv:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

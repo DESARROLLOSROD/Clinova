@@ -174,9 +174,19 @@ export async function POST(request: Request) {
         });
     }
 
+    // Return success with explicit clinic data
     return NextResponse.json({
       success: true,
-      clinic,
+      clinic: {
+        id: clinic.id,
+        name: clinic.name,
+        slug: clinic.slug,
+        email: clinic.email,
+        subscription_tier: clinic.subscription_tier,
+        subscription_status: clinic.subscription_status,
+        trial_ends_at: clinic.trial_ends_at,
+        is_active: clinic.is_active,
+      },
       manager: {
         id: authData.user.id,
         email: manager_email,

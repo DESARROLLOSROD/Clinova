@@ -80,6 +80,13 @@ export default function NewClinicPage() {
                 throw new Error(result.error || result.details || 'Error al crear la clínica')
             }
 
+            // Verify we have a clinic ID before redirecting
+            if (!result.clinic || !result.clinic.id) {
+                console.error('Invalid response from API:', result)
+                throw new Error('La clínica se creó pero no se recibió el ID correctamente')
+            }
+
+            console.log('Clinic created successfully:', result.clinic)
             toast.success(result.message || 'Clínica creada exitosamente')
             router.push(`/super-admin/clinics/${result.clinic.id}`)
         } catch (error: any) {

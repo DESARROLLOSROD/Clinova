@@ -34,24 +34,40 @@ interface Stats {
     appointments: number
 }
 
-export default function ClinicDetailsPage({ params }: { params: { id: string } }) {
+export default function ClinicDetailsPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
     const router = useRouter()
     const supabase = createClient()
     const [clinic, setClinic] = useState<ClinicDetails | null>(null)
     const [stats, setStats] = useState<Stats>({ users: 0, patients: 0, appointments: 0 })
     const [loading, setLoading] = useState(true)
+    const [clinicId, setClinicId] = useState<string | null>(null)
 
     useEffect(() => {
-        fetchClinicDetails()
-    }, [])
+        async function resolveParams() {
+            const resolvedParams = await params
+            setClinicId(resolvedParams.id)
+        }
+        resolveParams()
+    }, [params])
+
+    useEffect(() => {
+        if (clinicId) {
+            fetchClinicDetails()
+        }
+    }, [clinicId])
 
     async function fetchClinicDetails() {
+        if (!clinicId) {
+            console.error('No clinic ID available')
+            return
+        }
+
         try {
             // 1. Get Clinic Details
             const { data: clinicData, error: clinicError } = await supabase
                 .from('clinics')
                 .select('*')
-                .eq('id', params.id)
+                .eq('id', clinicId)
                 .single()
 
             if (clinicError) throw clinicError
@@ -59,10 +75,10 @@ export default function ClinicDetailsPage({ params }: { params: { id: string } }
             // 2. Get Manager Info
             const { data: managerData } = await supabase
                 .from('user_profiles')
-                .select('full_name, id') // We can't get email from profiles directly usually, but let's try assuming profiles has it or we get it differently. 
-                // Wait, user_profiles doesn't have email. We check auth.users usually via RPC or if we stored it. 
+                .select('full_name, id') // We can't get email from profiles directly usually, but let's try assuming profiles has it or we get it differently.
+                // Wait, user_profiles doesn't have email. We check auth.users usually via RPC or if we stored it.
                 // For now let's just show the name.
-                .eq('clinic_id', params.id)
+                .eq('clinic_id', clinicId)
                 .eq('role', 'clinic_manager')
                 .single()
 
@@ -73,9 +89,9 @@ export default function ClinicDetailsPage({ params }: { params: { id: string } }
 
             // 3. Get Stats
             const [usersCount, patientsCount, appointmentsCount] = await Promise.all([
-                supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('clinic_id', params.id),
-                supabase.from('patients').select('*', { count: 'exact', head: true }).eq('clinic_id', params.id),
-                supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('clinic_id', params.id)
+                supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId),
+                supabase.from('patients').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId),
+                supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('clinic_id', clinicId)
             ])
 
             setStats({
@@ -93,11 +109,13 @@ export default function ClinicDetailsPage({ params }: { params: { id: string } }
     }
 
     const handleStatusChange = async (newStatus: boolean) => {
+        if (!clinicId) return
+
         try {
             const { error } = await supabase
                 .from('clinics')
                 .update({ is_active: newStatus })
-                .eq('id', params.id)
+                .eq('id', clinicId)
 
             if (error) throw error
 
