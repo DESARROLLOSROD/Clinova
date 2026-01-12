@@ -97,7 +97,7 @@ export default function CreateUserForm({
           };
           break;
 
-        case UserRole.ADMIN:
+        case UserRole.CLINIC_MANAGER:
         case UserRole.RECEPTIONIST:
           additionalData = {
             phone: phone || null,
@@ -154,7 +154,8 @@ export default function CreateUserForm({
 
   const getRoleLabel = (role: UserRole): string => {
     const labels: Record<UserRole, string> = {
-      [UserRole.ADMIN]: 'Administrador',
+      [UserRole.SUPER_ADMIN]: 'Super Administrador',
+      [UserRole.CLINIC_MANAGER]: 'Encargado de Clínica',
       [UserRole.THERAPIST]: 'Fisioterapeuta',
       [UserRole.RECEPTIONIST]: 'Recepcionista',
       [UserRole.PATIENT]: 'Paciente',

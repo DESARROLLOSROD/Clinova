@@ -110,7 +110,7 @@ export async function updateSession(request: NextRequest) {
         // Admin-only routes
         const adminOnlyRoutes = ['/dashboard/users']
         if (adminOnlyRoutes.some(route => pathname.startsWith(route))) {
-            if (userRole !== UserRole.ADMIN) {
+            if (userRole !== UserRole.SUPER_ADMIN && userRole !== UserRole.CLINIC_MANAGER) {
                 return { supabase, user, response: NextResponse.redirect(getRedirectUrl('/dashboard')) }
             }
         }
@@ -118,21 +118,21 @@ export async function updateSession(request: NextRequest) {
         // Staff-only routes (admin + receptionist)
         const staffOnlyRoutes = ['/dashboard/users/create']
         if (staffOnlyRoutes.some(route => pathname.startsWith(route))) {
-            if (userRole !== UserRole.ADMIN && userRole !== UserRole.RECEPTIONIST) {
+            if (userRole !== UserRole.SUPER_ADMIN && userRole !== UserRole.CLINIC_MANAGER && userRole !== UserRole.RECEPTIONIST) {
                 return { supabase, user, response: NextResponse.redirect(getRedirectUrl('/dashboard')) }
             }
         }
 
         // Therapist management (admin only)
         if (pathname.startsWith('/dashboard/fisioterapeutas') && pathname !== '/dashboard/fisioterapeutas') {
-            if (userRole !== UserRole.ADMIN) {
+            if (userRole !== UserRole.SUPER_ADMIN && userRole !== UserRole.CLINIC_MANAGER) {
                 return { supabase, user, response: NextResponse.redirect(getRedirectUrl('/dashboard')) }
             }
         }
 
         // Configuration (admin only)
         if (pathname.startsWith('/dashboard/configuracion')) {
-            if (userRole !== UserRole.ADMIN) {
+            if (userRole !== UserRole.SUPER_ADMIN && userRole !== UserRole.CLINIC_MANAGER) {
                 return { supabase, user, response: NextResponse.redirect(getRedirectUrl('/dashboard')) }
             }
         }

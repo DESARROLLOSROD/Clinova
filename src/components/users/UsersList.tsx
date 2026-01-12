@@ -67,7 +67,8 @@ export default function UsersList() {
   const getRoleLabel = (role?: UserRole): string => {
     if (!role) return 'Sin rol';
     const labels: Record<UserRole, string> = {
-      [UserRole.ADMIN]: 'Administrador',
+      [UserRole.SUPER_ADMIN]: 'Super Administrador',
+      [UserRole.CLINIC_MANAGER]: 'Encargado de Clínica',
       [UserRole.THERAPIST]: 'Fisioterapeuta',
       [UserRole.RECEPTIONIST]: 'Recepcionista',
       [UserRole.PATIENT]: 'Paciente',
@@ -78,7 +79,8 @@ export default function UsersList() {
   const getRoleBadgeColor = (role?: UserRole): string => {
     if (!role) return 'bg-gray-100 text-gray-800';
     const colors: Record<UserRole, string> = {
-      [UserRole.ADMIN]: 'bg-purple-100 text-purple-800',
+      [UserRole.SUPER_ADMIN]: 'bg-red-100 text-red-800',
+      [UserRole.CLINIC_MANAGER]: 'bg-purple-100 text-purple-800',
       [UserRole.THERAPIST]: 'bg-blue-100 text-blue-800',
       [UserRole.RECEPTIONIST]: 'bg-green-100 text-green-800',
       [UserRole.PATIENT]: 'bg-yellow-100 text-yellow-800',
@@ -142,7 +144,7 @@ export default function UsersList() {
           className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="all">Todos los roles</option>
-          <option value={UserRole.ADMIN}>Administradores</option>
+          <option value={UserRole.CLINIC_MANAGER}>Encargados</option>
           <option value={UserRole.THERAPIST}>Fisioterapeutas</option>
           <option value={UserRole.RECEPTIONIST}>Recepcionistas</option>
           <option value={UserRole.PATIENT}>Pacientes</option>

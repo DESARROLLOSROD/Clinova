@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 export async function GET() {
   try {
     const supabase = await createClient();
 
-    // Verify user is authenticated and is admin
+    // Verify user is authenticated
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -14,18 +15,20 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    // Check if user is admin
+    // Check permissions
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('role')
+      .select('role, clinic_id')
       .eq('id', user.id)
       .single();
 
-    if (profile?.role !== 'admin') {
+    if (!profile || (profile.role !== 'super_admin' && profile.role !== 'clinic_manager')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
-    // Get all user profiles with their clinic info
+    // Get user profiles
+    // RLS will automatically filter this for clinic_manager
+    // Super admin will see all
     const { data: userProfiles, error: profilesError } = await supabase
       .from('user_profiles')
       .select(`
@@ -49,36 +52,46 @@ export async function GET() {
       );
     }
 
-    // Get emails from auth.users using service role
-    const users = [];
+    // Create admin client to fetch emails
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
 
-    for (const profile of userProfiles || []) {
-      // Query auth.users to get email
-      const { data: authUserData } = await supabase
-        .from('auth.users')
-        .select('email')
-        .eq('id', profile.id)
-        .single();
+    // Optimize: Fetch all users from Auth (if possible) or just map what we have
+    // Since we need emails which are only in Auth, and we can't join in Supabase
 
-      const fullNameParts = profile.full_name?.split(' ') || [];
-      const firstName = fullNameParts[0] || '';
-      const lastName = fullNameParts.slice(1).join(' ') || '';
+    // Efficiently fetch user data in parallel
+    const usersWithEmail = await Promise.all(
+      (userProfiles || []).map(async (p) => {
+        const { data: { user: authUser } } = await supabaseAdmin.auth.admin.getUserById(p.id);
 
-      users.push({
-        id: profile.id,
-        email: authUserData?.email || 'Sin email',
-        full_name: profile.full_name,
-        first_name: firstName,
-        last_name: lastName,
-        role: profile.role,
-        phone: profile.phone,
-        is_active: profile.is_active,
-        clinic_name: (profile.clinics as any)?.name || 'Sin clínica',
-        created_at: profile.created_at,
-      });
-    }
+        const fullNameParts = p.full_name?.split(' ') || [];
+        const firstName = fullNameParts[0] || '';
+        const lastName = fullNameParts.slice(1).join(' ') || '';
 
-    return NextResponse.json({ users });
+        return {
+          id: p.id,
+          email: authUser?.email || 'Sin email',
+          full_name: p.full_name,
+          first_name: firstName,
+          last_name: lastName,
+          role: p.role,
+          phone: p.phone,
+          is_active: p.is_active,
+          clinic_name: (p.clinics as any)?.name || 'Sin clínica',
+          created_at: p.created_at,
+        };
+      })
+    );
+
+    return NextResponse.json({ users: usersWithEmail });
   } catch (error: any) {
     console.error('Error in /api/users/list:', error);
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { UserRole } from '@/types/roles';
+import { getRoleTitle } from '@/utils/roleHelpers';
 
 /**
  * API Endpoint for creating users of any role
@@ -44,6 +45,50 @@ export async function POST(request: Request) {
       additionalData = {}
     } = body;
 
+    // Get the user performing the request to determine clinic_id
+    const supabaseClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      auth: { persistSession: false }
+    });
+
+    // Check authentication and get requestor profile
+    // Note: Since this is an API route, we rely on the header or session passed
+    // But since we are using supabase-js client side, the proper way is usually to pass the access token
+    // For now in Next.js App Router we can use createClient from utils/supabase/server
+    // However, this code uses a manual admin client. 
+
+    // Let's get the authorization header manually
+    const authHeader = request.headers.get('Authorization');
+    let requestorClinicId = null;
+    let isSuperAdmin = false;
+
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user: requestor }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+      if (!authError && requestor) {
+        // Get profile to check role and clinic
+        const { data: profile } = await supabaseAdmin
+          .from('user_profiles')
+          .select('role, clinic_id')
+          .eq('id', requestor.id)
+          .single();
+
+        if (profile) {
+          isSuperAdmin = profile.role === 'super_admin';
+          requestorClinicId = profile.clinic_id;
+
+          // If clinic manager tries to create user, enforce clinic_id
+          if (!isSuperAdmin && profile.role === 'clinic_manager') {
+            // Force the clinic_id
+            additionalData.clinic_id = requestorClinicId;
+          } else if (!isSuperAdmin) {
+            // Other roles shouldn't be here (middleware blocks them), but just in case
+            return NextResponse.json({ error: 'Unauthorized to create users' }, { status: 403 });
+          }
+        }
+      }
+    }
+
     // Validate required fields
     if (!email || !role || !first_name || !last_name) {
       return NextResponse.json({
@@ -78,10 +123,12 @@ export async function POST(request: Request) {
         first_name,
         last_name,
         role,
+        clinic_id: additionalData.clinic_id || null, // Ensure clinic_id is stored in metadata
         ...additionalData
       },
       app_metadata: {
         role,
+        clinic_id: additionalData.clinic_id || null, // Important for RLS if using custom claims later
       },
     });
 
@@ -111,6 +158,22 @@ export async function POST(request: Request) {
       if (roleAssignError) {
         console.error('Error assigning role:', roleAssignError);
       }
+    }
+
+    // Explicitly update user_profiles to ensure clinic_id and role are correct
+    // (This is robust against trigger failures or misconfiguration)
+    const { error: profileUpdateError } = await supabaseAdmin
+      .from('user_profiles')
+      .update({
+        role: role,
+        clinic_id: additionalData.clinic_id || null,
+        professional_title: additionalData.professional_title || getRoleTitle(role),
+        full_name: `${first_name} ${last_name}`
+      })
+      .eq('id', newUser.user.id);
+
+    if (profileUpdateError) {
+      console.error('Error updating profile:', profileUpdateError);
     }
 
     // Create role-specific records
@@ -165,9 +228,9 @@ export async function POST(request: Request) {
         roleSpecificError = patientError;
         break;
 
-      case UserRole.ADMIN:
+      case UserRole.CLINIC_MANAGER:
       case UserRole.RECEPTIONIST:
-        // For admin and receptionist, we might want a staff table
+        // For clinic_manager and receptionist, we might want a staff table
         // For now, they only exist in auth.users and user_roles
         // You can extend this later if needed
         break;

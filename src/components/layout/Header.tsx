@@ -22,7 +22,8 @@ export function Header({ userEmail }: { userEmail?: string }) {
     const getRoleLabel = (role: UserRole | null): string => {
         if (!role) return 'Usuario'
         const labels: Record<UserRole, string> = {
-            [UserRole.ADMIN]: 'Administrador',
+            [UserRole.SUPER_ADMIN]: 'Super Administrador',
+            [UserRole.CLINIC_MANAGER]: 'Encargado de Clínica',
             [UserRole.THERAPIST]: 'Fisioterapeuta',
             [UserRole.RECEPTIONIST]: 'Recepcionista',
             [UserRole.PATIENT]: 'Paciente',
