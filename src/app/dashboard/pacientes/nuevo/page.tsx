@@ -11,8 +11,15 @@ export default function NewPatientPage() {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [formData, setFormData] = useState({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        date_of_birth: ''
+    })
 
-    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         setIsLoading(true)
         setError(null)
@@ -31,13 +38,12 @@ export default function NewPatientPage() {
 
             if (!profile?.clinic_id) throw new Error('No se encontró la clínica del usuario')
 
-            const formData = new FormData(e.currentTarget)
             const patientData = {
-                first_name: formData.get('first_name') as string,
-                last_name: formData.get('last_name') as string,
-                email: formData.get('email') as string,
-                phone: formData.get('phone') as string,
-                date_of_birth: formData.get('date_of_birth') as string || null,
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                email: formData.email || null,
+                phone: formData.phone || null,
+                date_of_birth: formData.date_of_birth || null,
                 clinic_id: profile.clinic_id,
                 active: true
             }
@@ -71,23 +77,56 @@ export default function NewPatientPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
                         <Label htmlFor="first_name">Nombre *</Label>
-                        <Input id="first_name" name="first_name" required placeholder="Ej. Juan" />
+                        <Input
+                            id="first_name"
+                            name="first_name"
+                            required
+                            placeholder="Ej. Juan"
+                            value={formData.first_name}
+                            onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                        />
                     </div>
                     <div>
                         <Label htmlFor="last_name">Apellidos *</Label>
-                        <Input id="last_name" name="last_name" required placeholder="Ej. Pérez" />
+                        <Input
+                            id="last_name"
+                            name="last_name"
+                            required
+                            placeholder="Ej. Pérez"
+                            value={formData.last_name}
+                            onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                        />
                     </div>
                     <div>
                         <Label htmlFor="email">Correo electrónico</Label>
-                        <Input id="email" name="email" type="email" placeholder="juan@ejemplo.com" />
+                        <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="juan@ejemplo.com"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
                     </div>
                     <div>
                         <Label htmlFor="phone">Teléfono</Label>
-                        <Input id="phone" name="phone" placeholder="55 1234 5678" />
+                        <Input
+                            id="phone"
+                            name="phone"
+                            placeholder="55 1234 5678"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
                     </div>
                     <div>
                         <Label htmlFor="date_of_birth">Fecha de Nacimiento</Label>
-                        <Input id="date_of_birth" name="date_of_birth" type="date" />
+                        <Input
+                            id="date_of_birth"
+                            name="date_of_birth"
+                            type="date"
+                            value={formData.date_of_birth}
+                            onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
+                        />
                     </div>
                 </div>
 
@@ -97,7 +136,7 @@ export default function NewPatientPage() {
                     </div>
                 )}
 
-                <div className="flex justify-end gap-4 pt-4 border-t border-gray-100">
+                <div className="flex justify-end gap-4 pt-4 border-gray-100">
                     <Button
                         type="button"
                         variant="ghost"
