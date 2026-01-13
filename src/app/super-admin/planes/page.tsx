@@ -13,6 +13,7 @@ interface SubscriptionPlan {
     display_name: string
     description: string
     monthly_price: number
+    quarterly_price: number
     yearly_price: number
     currency: string
     max_users: number
@@ -59,6 +60,7 @@ export default function SubscriptionPlansPage() {
         setEditingPlan(plan.id)
         setEditForm({
             monthly_price: plan.monthly_price,
+            quarterly_price: plan.quarterly_price,
             yearly_price: plan.yearly_price,
             max_users: plan.max_users,
             max_patients: plan.max_patients,
@@ -154,6 +156,22 @@ export default function SubscriptionPlansPage() {
                                     ) : (
                                         <p className="text-lg font-semibold text-gray-900">
                                             ${plan.monthly_price.toLocaleString('es-MX')}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <Label>Precio Trimestral - 3 Meses ({plan.currency})</Label>
+                                    {isEditing ? (
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            value={editForm.quarterly_price || 0}
+                                            onChange={(e) => setEditForm({ ...editForm, quarterly_price: parseFloat(e.target.value) })}
+                                        />
+                                    ) : (
+                                        <p className="text-lg font-semibold text-gray-900">
+                                            ${plan.quarterly_price?.toLocaleString('es-MX')}
                                         </p>
                                     )}
                                 </div>

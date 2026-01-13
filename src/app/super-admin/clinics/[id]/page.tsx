@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Building2, Mail, Phone, MapPin, Users, Calendar, Activity, Edit2, Archive } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { ArrowLeft, Building2, Mail, Phone, MapPin, Users, Calendar, Activity, Edit2, Archive, X } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
@@ -41,6 +43,17 @@ export default function ClinicDetailsPage({ params }: { params: Promise<{ id: st
     const [stats, setStats] = useState<Stats>({ users: 0, patients: 0, appointments: 0 })
     const [loading, setLoading] = useState(true)
     const [clinicId, setClinicId] = useState<string | null>(null)
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+    const [editForm, setEditForm] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        city: '',
+        state: '',
+        country: '',
+        subscription_tier: ''
+    })
+    const [isSaving, setIsSaving] = useState(false)
 
     useEffect(() => {
         async function resolveParams() {
@@ -126,6 +139,50 @@ export default function ClinicDetailsPage({ params }: { params: Promise<{ id: st
         }
     }
 
+    const openEditModal = () => {
+        if (!clinic) return
+        setEditForm({
+            name: clinic.name,
+            email: clinic.email || '',
+            phone: clinic.phone || '',
+            city: clinic.city || '',
+            state: clinic.state || '',
+            country: clinic.country || '',
+            subscription_tier: clinic.subscription_tier
+        })
+        setIsEditModalOpen(true)
+    }
+
+    const handleSaveChanges = async () => {
+        if (!clinicId) return
+        setIsSaving(true)
+
+        try {
+            const { error } = await supabase
+                .from('clinics')
+                .update({
+                    name: editForm.name,
+                    email: editForm.email,
+                    phone: editForm.phone,
+                    city: editForm.city,
+                    state: editForm.state,
+                    country: editForm.country,
+                    subscription_tier: editForm.subscription_tier
+                })
+                .eq('id', clinicId)
+
+            if (error) throw error
+
+            toast.success('Clínica actualizada exitosamente')
+            setIsEditModalOpen(false)
+            await fetchClinicDetails() // Reload clinic data
+        } catch (error: any) {
+            toast.error('Error al actualizar la clínica: ' + error.message)
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -183,7 +240,7 @@ export default function ClinicDetailsPage({ params }: { params: Promise<{ id: st
                         >
                             {clinic.is_active ? 'Desactivar Clínica' : 'Activar Clínica'}
                         </Button>
-                        <Button>
+                        <Button onClick={openEditModal}>
                             <Edit2 className="h-4 w-4 mr-2" />
                             Editar Detalles
                         </Button>
@@ -299,6 +356,116 @@ export default function ClinicDetailsPage({ params }: { params: Promise<{ id: st
                     </Card>
                 </div>
             </div>
+
+            {/* Edit Modal */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+                            <h2 className="text-xl font-bold text-gray-900">Editar Clínica</h2>
+                            <button
+                                onClick={() => setIsEditModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <Label htmlFor="name">Nombre de la Clínica</Label>
+                                <Input
+                                    id="name"
+                                    value={editForm.name}
+                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                    placeholder="Nombre de la clínica"
+                                />
+                            </div>
+
+                            <div>
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={editForm.email}
+                                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                                    placeholder="correo@clinica.com"
+                                />
+                            </div>
+
+                            <div>
+                                <Label htmlFor="phone">Teléfono</Label>
+                                <Input
+                                    id="phone"
+                                    value={editForm.phone}
+                                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                                    placeholder="123-456-7890"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <Label htmlFor="city">Ciudad</Label>
+                                    <Input
+                                        id="city"
+                                        value={editForm.city}
+                                        onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                                        placeholder="Ciudad"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="state">Estado</Label>
+                                    <Input
+                                        id="state"
+                                        value={editForm.state}
+                                        onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
+                                        placeholder="Estado"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="country">País</Label>
+                                    <Input
+                                        id="country"
+                                        value={editForm.country}
+                                        onChange={(e) => setEditForm({ ...editForm, country: e.target.value })}
+                                        placeholder="País"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <Label htmlFor="subscription_tier">Plan de Suscripción</Label>
+                                <select
+                                    id="subscription_tier"
+                                    value={editForm.subscription_tier}
+                                    onChange={(e) => setEditForm({ ...editForm, subscription_tier: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="basic">Básico</option>
+                                    <option value="professional">Profesional</option>
+                                    <option value="enterprise">Enterprise</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-gray-200 flex justify-end gap-3 sticky bottom-0 bg-white">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsEditModalOpen(false)}
+                                disabled={isSaving}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                onClick={handleSaveChanges}
+                                disabled={isSaving}
+                            >
+                                {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
