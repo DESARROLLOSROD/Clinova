@@ -19,7 +19,7 @@ export default async function NewSessionPage({
     // Fetch appointment details to show context
     const { data: appointment } = await supabase
         .from('appointments')
-        .select('*, patients(first_name, last_name)')
+        .select('*, patients(id, first_name, last_name)')
         .eq('id', appointmentId)
         .single()
 

@@ -1,16 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { ArrowLeft, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { FileUpload } from '@/components/patients/FileUpload';
 
 export default function InitialAssessmentPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const patientId = params.id as string;
+  const appointmentId = searchParams.get('appointment_id');
+  const returnTo = searchParams.get('return_to');
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
 
@@ -31,6 +35,20 @@ export default function InitialAssessmentPage() {
     notes: '',
   });
 
+  // Medical History fields
+  const [medicalHistory, setMedicalHistory] = useState({
+    blood_type: '',
+    height_cm: '',
+    weight_kg: '',
+    family_history: '',
+    lifestyle_notes: '',
+  });
+
+  const [allergies, setAllergies] = useState<string[]>(['']);
+  const [chronicConditions, setChronicConditions] = useState<string[]>(['']);
+  const [currentMedications, setCurrentMedications] = useState<string[]>(['']);
+  const [previousSurgeries, setPreviousSurgeries] = useState<string[]>(['']);
+
   const [treatmentGoals, setTreatmentGoals] = useState<string[]>(['']);
   const [aggravatingFactors, setAggravatingFactors] = useState<string[]>(['']);
   const [relievingFactors, setRelievingFactors] = useState<string[]>(['']);
@@ -42,6 +60,26 @@ export default function InitialAssessmentPage() {
     try {
       const { data: user } = await supabase.auth.getUser();
 
+      // 1. Create Medical History first
+      const { error: medHistoryError } = await supabase.from('patient_medical_history').insert({
+        patient_id: patientId,
+        allergies: allergies.filter((a) => a.trim() !== ''),
+        chronic_conditions: chronicConditions.filter((c) => c.trim() !== ''),
+        current_medications: currentMedications.filter((m) => m.trim() !== ''),
+        previous_surgeries: previousSurgeries.filter((s) => s.trim() !== ''),
+        family_history: medicalHistory.family_history || null,
+        lifestyle_notes: medicalHistory.lifestyle_notes || null,
+        blood_type: medicalHistory.blood_type || null,
+        height_cm: medicalHistory.height_cm ? parseFloat(medicalHistory.height_cm) : null,
+        weight_kg: medicalHistory.weight_kg ? parseFloat(medicalHistory.weight_kg) : null,
+      });
+
+      if (medHistoryError) {
+        console.error('Error creating medical history:', medHistoryError);
+        // Continue anyway - medical history is optional
+      }
+
+      // 2. Create Initial Assessment
       const { error } = await supabase.from('initial_assessments').insert({
         patient_id: patientId,
         assessed_by: user.user?.id,
@@ -66,7 +104,12 @@ export default function InitialAssessmentPage() {
 
       if (error) throw error;
 
-      router.push(`/dashboard/pacientes/${patientId}`);
+      // If we came from a session creation flow, redirect back to create the session
+      if (returnTo === 'session' && appointmentId) {
+        router.push(`/dashboard/sesiones/nueva?appointment_id=${appointmentId}`);
+      } else {
+        router.push(`/dashboard/pacientes/${patientId}`);
+      }
     } catch (error) {
       console.error('Error creating assessment:', error);
       alert('Error al crear la evaluación');
@@ -133,6 +176,227 @@ export default function InitialAssessmentPage() {
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Cronología y evolución de los síntomas..."
+            />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow space-y-6">
+          <h2 className="text-xl font-semibold">Historial Médico</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tipo de Sangre
+              </label>
+              <input
+                type="text"
+                value={medicalHistory.blood_type}
+                onChange={(e) => setMedicalHistory({ ...medicalHistory, blood_type: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ej: O+"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Estatura (cm)
+              </label>
+              <input
+                type="number"
+                value={medicalHistory.height_cm}
+                onChange={(e) => setMedicalHistory({ ...medicalHistory, height_cm: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="170"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Peso (kg)
+              </label>
+              <input
+                type="number"
+                value={medicalHistory.weight_kg}
+                onChange={(e) => setMedicalHistory({ ...medicalHistory, weight_kg: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="70"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <label className="block text-sm font-medium text-gray-700">Alergias</label>
+              <button
+                type="button"
+                onClick={() => setAllergies([...allergies, ''])}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+              >
+                <Plus size={16} />
+                Agregar
+              </button>
+            </div>
+            {allergies.map((allergy, idx) => (
+              <div key={idx} className="flex gap-2">
+                <input
+                  type="text"
+                  value={allergy}
+                  onChange={(e) => {
+                    const newAllergies = [...allergies];
+                    newAllergies[idx] = e.target.value;
+                    setAllergies(newAllergies);
+                  }}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ej: Penicilina"
+                />
+                {allergies.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setAllergies(allergies.filter((_, i) => i !== idx))}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                  >
+                    <X size={20} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <label className="block text-sm font-medium text-gray-700">Condiciones Crónicas</label>
+              <button
+                type="button"
+                onClick={() => setChronicConditions([...chronicConditions, ''])}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+              >
+                <Plus size={16} />
+                Agregar
+              </button>
+            </div>
+            {chronicConditions.map((condition, idx) => (
+              <div key={idx} className="flex gap-2">
+                <input
+                  type="text"
+                  value={condition}
+                  onChange={(e) => {
+                    const newConditions = [...chronicConditions];
+                    newConditions[idx] = e.target.value;
+                    setChronicConditions(newConditions);
+                  }}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ej: Diabetes tipo 2"
+                />
+                {chronicConditions.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setChronicConditions(chronicConditions.filter((_, i) => i !== idx))}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                  >
+                    <X size={20} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <label className="block text-sm font-medium text-gray-700">Medicamentos Actuales</label>
+              <button
+                type="button"
+                onClick={() => setCurrentMedications([...currentMedications, ''])}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+              >
+                <Plus size={16} />
+                Agregar
+              </button>
+            </div>
+            {currentMedications.map((medication, idx) => (
+              <div key={idx} className="flex gap-2">
+                <input
+                  type="text"
+                  value={medication}
+                  onChange={(e) => {
+                    const newMedications = [...currentMedications];
+                    newMedications[idx] = e.target.value;
+                    setCurrentMedications(newMedications);
+                  }}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ej: Metformina 500mg 2x/día"
+                />
+                {currentMedications.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentMedications(currentMedications.filter((_, i) => i !== idx))}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                  >
+                    <X size={20} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <label className="block text-sm font-medium text-gray-700">Cirugías Previas</label>
+              <button
+                type="button"
+                onClick={() => setPreviousSurgeries([...previousSurgeries, ''])}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+              >
+                <Plus size={16} />
+                Agregar
+              </button>
+            </div>
+            {previousSurgeries.map((surgery, idx) => (
+              <div key={idx} className="flex gap-2">
+                <input
+                  type="text"
+                  value={surgery}
+                  onChange={(e) => {
+                    const newSurgeries = [...previousSurgeries];
+                    newSurgeries[idx] = e.target.value;
+                    setPreviousSurgeries(newSurgeries);
+                  }}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ej: Apendicectomía (2018)"
+                />
+                {previousSurgeries.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setPreviousSurgeries(previousSurgeries.filter((_, i) => i !== idx))}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                  >
+                    <X size={20} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Antecedentes Familiares
+            </label>
+            <textarea
+              value={medicalHistory.family_history}
+              onChange={(e) => setMedicalHistory({ ...medicalHistory, family_history: e.target.value })}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Historial médico familiar relevante..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Estilo de Vida
+            </label>
+            <textarea
+              value={medicalHistory.lifestyle_notes}
+              onChange={(e) => setMedicalHistory({ ...medicalHistory, lifestyle_notes: e.target.value })}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Actividad física, hábitos, ocupación, etc..."
             />
           </div>
         </div>
@@ -408,6 +672,18 @@ export default function InitialAssessmentPage() {
               placeholder="Cualquier información adicional relevante..."
             />
           </div>
+        </div>
+
+        {/* File Upload Section */}
+        <div className="bg-white p-6 rounded-lg shadow space-y-6">
+          <h2 className="text-xl font-semibold">Documentos y Archivos Médicos</h2>
+          <p className="text-sm text-gray-600">
+            Sube radiografías, estudios de laboratorio, recetas médicas, o fotos del paciente (opcional)
+          </p>
+          <FileUpload
+            patientId={patientId}
+            assessmentId={undefined} // Will be set after assessment is created
+          />
         </div>
 
         <div className="flex gap-3">

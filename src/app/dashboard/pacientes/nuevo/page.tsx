@@ -42,10 +42,16 @@ export default function NewPatientPage() {
                 active: true
             }
 
-            const { error } = await supabase.from('patients').insert([patientData])
+            const { data: newPatient, error } = await supabase
+                .from('patients')
+                .insert([patientData])
+                .select()
+                .single()
+
             if (error) throw error
 
-            router.push('/dashboard/pacientes')
+            // Redirect to initial evaluation for the new patient
+            router.push(`/dashboard/pacientes/${newPatient.id}/evaluacion`)
             router.refresh()
         } catch (err: any) {
             setError(err.message)
