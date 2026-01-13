@@ -167,7 +167,7 @@ AND tablename IN ('patients', 'appointments', 'payments');
 
 ```typescript
 // lib/utils/clinic.ts
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/utils/supabase/client';
 
 export async function getCurrentClinicId(): Promise<string> {
   const supabase = createClient();
