@@ -2,7 +2,7 @@ import { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
-import { Building2, BarChart3, Settings, LogOut } from 'lucide-react'
+import { Building2, BarChart3, Settings, LogOut, CreditCard } from 'lucide-react'
 
 export default async function SuperAdminLayout({
     children,
@@ -92,6 +92,13 @@ export default async function SuperAdminLayout({
                         >
                             <Settings className="h-5 w-5" />
                             Facturación
+                        </Link>
+                        <Link
+                            href="/super-admin/planes"
+                            className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg"
+                        >
+                            <CreditCard className="h-5 w-5" />
+                            Planes de Suscripción
                         </Link>
                     </nav>
                 </aside>

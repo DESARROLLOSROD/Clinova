@@ -16,7 +16,8 @@
       "Bash(du:*)",
       "Bash(git mv:*)",
       "Bash(git reset:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx supabase status:*)"
     ]
   }
 }
