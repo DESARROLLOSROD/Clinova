@@ -23,15 +23,45 @@ Tu clínica de prueba (`admin@demo.com`) está mostrando datos de otra clínica.
 - ✅ ¿Hay datos huérfanos (sin `clinic_id`)?
 - ✅ ¿RLS está habilitado en todas las tablas?
 
-### Paso 2: Aplicar la Migración de Aislamiento
+### Paso 2: Corregir Datos Huérfanos (si los hay)
+
+**⚠️ IMPORTANTE:** Si el diagnóstico del Paso 1 mostró pacientes/citas/usuarios sin `clinic_id`, primero ejecuta:
+
+**Archivo:** `supabase/migrations/20260113_fix_orphan_data.sql`
+
+Este script:
+- 🔍 Te muestra exactamente qué datos no tienen clínica asignada
+- 🔧 Te da opciones para corregirlos automática o manualmente
+- ✅ Verifica que todo esté correcto antes de continuar
+
+**Opciones de corrección:**
+
+#### Si tienes UNA sola clínica (automático)
+Descomenta la sección "OPCIÓN A" en el script y ejecuta. Asignará todos los datos a esa clínica.
+
+#### Si tienes MÚLTIPLES clínicas (manual)
+Necesitas asignar manualmente cada dato a la clínica correcta. Hay ejemplos en el script.
+
+### Paso 3: Aplicar la Migración Principal
+
+**✅ Solo después de que NO haya datos huérfanos**, ejecuta la migración principal:
+
+**Archivo:** `supabase/migrations/20260113_enforce_clinic_data_isolation.sql`
 
 #### Opción A: Desde Supabase Dashboard (Recomendado)
 
 1. Ve a **SQL Editor** en Supabase
-2. Abre el archivo: `supabase/migrations/20260113_enforce_clinic_data_isolation.sql`
-3. Copia todo el contenido
-4. Pégalo en el SQL Editor
-5. Haz clic en **Run**
+2. Copia el contenido de `20260113_enforce_clinic_data_isolation.sql`
+3. Pégalo en el SQL Editor
+4. Haz clic en **Run**
+
+Esta migración hará:
+- ✅ Habilitar RLS en todas las tablas
+- ✅ Crear políticas de seguridad por clínica
+- ✅ Asegurar que clinic_id sea NOT NULL
+- ✅ Agregar triggers de validación
+
+**Nota:** Si aún hay datos huérfanos, la migración fallará con un mensaje claro indicándote cuántos registros faltan.
 
 #### Opción B: Desde la Terminal
 

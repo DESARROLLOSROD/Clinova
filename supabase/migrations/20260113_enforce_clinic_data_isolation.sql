@@ -19,11 +19,30 @@ DO $$
 DECLARE
   default_clinic_id uuid;
   clinic_count integer;
+  orphan_patients integer;
+  orphan_appointments integer;
+  orphan_payments integer;
+  orphan_users integer;
 BEGIN
+  -- Contar clínicas
   SELECT COUNT(*) INTO clinic_count FROM public.clinics;
 
+  -- Contar registros huérfanos
+  SELECT COUNT(*) INTO orphan_patients FROM public.patients WHERE clinic_id IS NULL;
+  SELECT COUNT(*) INTO orphan_appointments FROM public.appointments WHERE clinic_id IS NULL;
+  SELECT COUNT(*) INTO orphan_payments FROM public.payments WHERE clinic_id IS NULL;
+  SELECT COUNT(*) INTO orphan_users FROM public.user_profiles WHERE clinic_id IS NULL;
+
+  RAISE NOTICE 'Total de clínicas: %', clinic_count;
+  RAISE NOTICE 'Pacientes sin clinic_id: %', orphan_patients;
+  RAISE NOTICE 'Citas sin clinic_id: %', orphan_appointments;
+  RAISE NOTICE 'Pagos sin clinic_id: %', orphan_payments;
+  RAISE NOTICE 'Usuarios sin clinic_id: %', orphan_users;
+
   IF clinic_count = 1 THEN
+    -- Solo hay una clínica, asignar todos los huérfanos a ella
     SELECT id INTO default_clinic_id FROM public.clinics LIMIT 1;
+    RAISE NOTICE 'Asignando todos los datos huérfanos a la clínica: %', default_clinic_id;
 
     UPDATE public.patients
     SET clinic_id = default_clinic_id
@@ -40,7 +59,83 @@ BEGIN
     UPDATE public.user_profiles
     SET clinic_id = default_clinic_id
     WHERE clinic_id IS NULL;
+
+    RAISE NOTICE 'Datos huérfanos actualizados correctamente';
+
+  ELSIF clinic_count > 1 THEN
+    -- Hay múltiples clínicas, intentar asignar basándose en relaciones
+    RAISE NOTICE 'Múltiples clínicas detectadas. Intentando asignación inteligente...';
+
+    -- Asignar appointments según el clinic_id del paciente
+    UPDATE public.appointments a
+    SET clinic_id = p.clinic_id
+    FROM public.patients p
+    WHERE a.patient_id = p.id
+    AND a.clinic_id IS NULL
+    AND p.clinic_id IS NOT NULL;
+
+    -- Asignar payments según el clinic_id del paciente
+    UPDATE public.payments pay
+    SET clinic_id = p.clinic_id
+    FROM public.patients p
+    WHERE pay.patient_id = p.id
+    AND pay.clinic_id IS NULL
+    AND p.clinic_id IS NOT NULL;
+
+    -- Verificar si aún quedan huérfanos
+    SELECT COUNT(*) INTO orphan_patients FROM public.patients WHERE clinic_id IS NULL;
+    SELECT COUNT(*) INTO orphan_appointments FROM public.appointments WHERE clinic_id IS NULL;
+    SELECT COUNT(*) INTO orphan_payments FROM public.payments WHERE clinic_id IS NULL;
+    SELECT COUNT(*) INTO orphan_users FROM public.user_profiles WHERE clinic_id IS NULL;
+
+    IF orphan_patients > 0 OR orphan_appointments > 0 OR orphan_payments > 0 OR orphan_users > 0 THEN
+      RAISE EXCEPTION 'Aún hay datos huérfanos después de la asignación automática. Por favor, asígnalos manualmente antes de continuar. Pacientes: %, Citas: %, Pagos: %, Usuarios: %',
+        orphan_patients, orphan_appointments, orphan_payments, orphan_users;
+    END IF;
+
+  ELSE
+    RAISE EXCEPTION 'No hay clínicas registradas. Debes crear al menos una clínica antes de ejecutar esta migración.';
   END IF;
+END $$;
+
+-- Verificar una última vez que no hay datos huérfanos antes de hacer NOT NULL
+DO $$
+DECLARE
+  orphan_count integer;
+BEGIN
+  SELECT COUNT(*) INTO orphan_count
+  FROM public.patients
+  WHERE clinic_id IS NULL;
+
+  IF orphan_count > 0 THEN
+    RAISE EXCEPTION 'No se puede continuar: hay % pacientes sin clinic_id', orphan_count;
+  END IF;
+
+  SELECT COUNT(*) INTO orphan_count
+  FROM public.appointments
+  WHERE clinic_id IS NULL;
+
+  IF orphan_count > 0 THEN
+    RAISE EXCEPTION 'No se puede continuar: hay % citas sin clinic_id', orphan_count;
+  END IF;
+
+  SELECT COUNT(*) INTO orphan_count
+  FROM public.payments
+  WHERE clinic_id IS NULL;
+
+  IF orphan_count > 0 THEN
+    RAISE EXCEPTION 'No se puede continuar: hay % pagos sin clinic_id', orphan_count;
+  END IF;
+
+  SELECT COUNT(*) INTO orphan_count
+  FROM public.user_profiles
+  WHERE clinic_id IS NULL;
+
+  IF orphan_count > 0 THEN
+    RAISE EXCEPTION 'No se puede continuar: hay % usuarios sin clinic_id', orphan_count;
+  END IF;
+
+  RAISE NOTICE 'Verificación completada: no hay datos huérfanos';
 END $$;
 
 -- Ahora hacer clinic_id NOT NULL para prevenir datos huérfanos en el futuro

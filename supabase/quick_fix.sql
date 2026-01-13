@@ -2,6 +2,13 @@
 -- Script Rápido: Verificar y Corregir Aislamiento
 -- =====================================================
 -- Este script se puede ejecutar directamente en Supabase SQL Editor
+-- para diagnosticar problemas de aislamiento de datos
+--
+-- INSTRUCCIONES:
+-- 1. Ejecuta este script completo en Supabase SQL Editor
+-- 2. Revisa los resultados de cada sección
+-- 3. Si hay datos huérfanos, ejecuta: 20260113_fix_orphan_data.sql
+-- 4. Luego ejecuta la migración: 20260113_enforce_clinic_data_isolation.sql
 -- =====================================================
 
 -- PASO 1: Ver el estado actual
