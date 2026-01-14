@@ -27,13 +27,13 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400';
       case 'inactive':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400';
       case 'on_leave':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300';
     }
   };
 
@@ -53,7 +53,7 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
   return (
     <div className="space-y-4">
       {/* Search Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 transition-colors">
         <Input
           type="text"
           placeholder="Buscar por nombre, email o licencia..."
@@ -64,14 +64,14 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
       </div>
 
       {/* Results Count */}
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-gray-600 dark:text-gray-400">
         {filteredTherapists.length} fisioterapeuta{filteredTherapists.length !== 1 ? 's' : ''} encontrado{filteredTherapists.length !== 1 ? 's' : ''}
       </div>
 
       {/* Therapist Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTherapists.length === 0 ? (
-          <div className="col-span-full bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center text-gray-500">
+          <div className="col-span-full bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-12 text-center text-gray-500 dark:text-gray-400">
             {searchTerm ? 'No se encontraron fisioterapeutas.' : 'No hay fisioterapeutas registrados.'}
           </div>
         ) : (
@@ -81,7 +81,7 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
               href={`/dashboard/fisioterapeutas/${therapist.id}`}
               className="block"
             >
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all hover:border-blue-200">
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 hover:shadow-md transition-all hover:border-blue-200 dark:hover:border-blue-800">
                 {/* Header with Avatar and Status */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -93,17 +93,17 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-lg">
+                        <span className="text-blue-600 dark:text-blue-400 font-semibold text-lg">
                           {therapist.first_name[0]}{therapist.last_name[0]}
                         </span>
                       </div>
                     )}
                     <div>
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                         {therapist.first_name} {therapist.last_name}
                       </h3>
                       {therapist.license_number && (
-                        <p className="text-xs text-gray-500">Lic. {therapist.license_number}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Lic. {therapist.license_number}</p>
                       )}
                     </div>
                   </div>
@@ -115,14 +115,14 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
                 {/* Contact Info */}
                 <div className="space-y-2 mb-4">
                   {therapist.email && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Mail size={14} className="text-gray-400" />
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <Mail size={14} className="text-gray-400 dark:text-gray-500" />
                       <span className="truncate">{therapist.email}</span>
                     </div>
                   )}
                   {therapist.phone && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Phone size={14} className="text-gray-400" />
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <Phone size={14} className="text-gray-400 dark:text-gray-500" />
                       <span>{therapist.phone}</span>
                     </div>
                   )}
@@ -131,7 +131,7 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
                 {/* Specialties */}
                 {therapist.specialties && therapist.specialties.length > 0 && (
                   <div className="mb-4">
-                    <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mb-2">
                       <Briefcase size={12} />
                       <span>Especialidades</span>
                     </div>
@@ -139,13 +139,13 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
                       {therapist.specialties.slice(0, 3).map((specialty: string, index: number) => (
                         <span
                           key={index}
-                          className="inline-block px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded"
+                          className="inline-block px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded"
                         >
                           {specialty}
                         </span>
                       ))}
                       {therapist.specialties.length > 3 && (
-                        <span className="inline-block px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded">
+                        <span className="inline-block px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs rounded">
                           +{therapist.specialties.length - 3} más
                         </span>
                       )}
@@ -154,9 +154,9 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
                 )}
 
                 {/* Patient Count */}
-                <div className="pt-4 border-t border-gray-100">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Users size={16} className="text-gray-400" />
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <Users size={16} className="text-gray-400 dark:text-gray-500" />
                     <span>
                       {therapist.therapist_patient_assignments?.[0]?.count || 0} paciente
                       {(therapist.therapist_patient_assignments?.[0]?.count || 0) !== 1 ? 's' : ''} asignado
@@ -166,7 +166,7 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
                 </div>
 
                 {/* View Details Button */}
-                <div className="mt-4 flex items-center justify-end text-sm text-blue-600">
+                <div className="mt-4 flex items-center justify-end text-sm text-blue-600 dark:text-blue-400">
                   <Eye size={16} className="mr-1" />
                   Ver Detalles
                 </div>

@@ -47,8 +47,8 @@ export default async function TreatmentTemplatesPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Plantillas de Tratamiento</h1>
-          <p className="text-gray-600 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Plantillas de Tratamiento</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
             Crea y gestiona plantillas reutilizables para tratamientos comunes
           </p>
         </div>
@@ -61,29 +61,29 @@ export default async function TreatmentTemplatesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow border border-gray-100">
-          <p className="text-sm text-gray-600">Total Plantillas</p>
-          <p className="text-2xl font-bold text-blue-600">{templates?.length || 0}</p>
+        <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow border border-gray-100 dark:border-gray-800 transition-colors">
+          <p className="text-sm text-gray-600 dark:text-gray-400">Total Plantillas</p>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{templates?.length || 0}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow border border-gray-100">
-          <p className="text-sm text-gray-600">Plantillas Activas</p>
-          <p className="text-2xl font-bold text-green-600">
+        <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow border border-gray-100 dark:border-gray-800 transition-colors">
+          <p className="text-sm text-gray-600 dark:text-gray-400">Plantillas Activas</p>
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
             {templates?.filter((t) => t.is_active).length || 0}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow border border-gray-100">
-          <p className="text-sm text-gray-600">Categorías</p>
-          <p className="text-2xl font-bold text-purple-600">
+        <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow border border-gray-100 dark:border-gray-800 transition-colors">
+          <p className="text-sm text-gray-600 dark:text-gray-400">Categorías</p>
+          <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
             {Object.keys(categorizedTemplates).length}
           </p>
         </div>
       </div>
 
       {Object.keys(categorizedTemplates).length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-          <FileText className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No hay plantillas</h3>
-          <p className="mt-2 text-sm text-gray-500">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-12 text-center transition-colors">
+          <FileText className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+          <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">No hay plantillas</h3>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Comienza creando tu primera plantilla de tratamiento
           </p>
           <Link href="/dashboard/plantillas/nueva">
@@ -97,7 +97,7 @@ export default async function TreatmentTemplatesPage() {
         <div className="space-y-6">
           {Object.entries(categorizedTemplates).map(([category, categoryTemplates]) => (
             <div key={category}>
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">{category}</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">{category}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {(categoryTemplates as any[]).map((template) => (
                   <Link
@@ -105,18 +105,18 @@ export default async function TreatmentTemplatesPage() {
                     href={`/dashboard/plantillas/${template.id}`}
                     className="block"
                   >
-                    <div className="bg-white rounded-lg shadow border border-gray-100 p-5 hover:shadow-md transition-shadow h-full">
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-100 dark:border-gray-800 p-5 hover:shadow-md transition-all hover:border-blue-200 dark:hover:border-blue-800 h-full">
                       <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 flex-1">{template.name}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex-1">{template.name}</h3>
                         {!template.is_active && (
-                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                          <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs rounded-full">
                             Inactiva
                           </span>
                         )}
                       </div>
 
                       {template.description && (
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
                           {template.description}
                         </p>
                       )}
@@ -138,27 +138,27 @@ export default async function TreatmentTemplatesPage() {
 
                         {template.template_techniques &&
                           template.template_techniques.length > 0 && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <FileText size={16} className="text-gray-400" />
+                            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                              <FileText size={16} className="text-gray-400 dark:text-gray-500" />
                               <span>{template.template_techniques.length} técnicas</span>
                             </div>
                           )}
                       </div>
 
                       {template.objectives && template.objectives.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <p className="text-xs font-medium text-gray-500 mb-1">Objetivos:</p>
+                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-500 mb-1">Objetivos:</p>
                           <div className="flex flex-wrap gap-1">
                             {template.objectives.slice(0, 3).map((objective: any, idx: number) => (
                               <span
                                 key={idx}
-                                className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded"
+                                className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded"
                               >
                                 {objective}
                               </span>
                             ))}
                             {template.objectives.length > 3 && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-500 dark:text-gray-500">
                                 +{template.objectives.length - 3} más
                               </span>
                             )}
