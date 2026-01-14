@@ -54,12 +54,14 @@ export function StatsCharts() {
                             />
                             <Tooltip
                                 contentStyle={{
-                                    backgroundColor: '#fff',
-                                    border: 'none',
+                                    backgroundColor: 'var(--card)',
+                                    border: '1px solid var(--border)',
                                     borderRadius: '8px',
                                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                                 }}
-                                cursor={{ fill: '#f1f5f9', opacity: 0.4 }}
+                                itemStyle={{ color: 'var(--foreground)' }}
+                                labelStyle={{ color: 'var(--foreground)', fontWeight: 'bold' }}
+                                cursor={{ fill: 'var(--accent)', opacity: 0.1 }}
                             />
                             <Bar dataKey="sesiones" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={32} />
                         </BarChart>
@@ -93,11 +95,13 @@ export function StatsCharts() {
                             />
                             <Tooltip
                                 contentStyle={{
-                                    backgroundColor: '#fff',
-                                    border: 'none',
+                                    backgroundColor: 'var(--card)',
+                                    border: '1px solid var(--border)',
                                     borderRadius: '8px',
                                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                                 }}
+                                itemStyle={{ color: 'var(--foreground)' }}
+                                labelStyle={{ color: 'var(--foreground)', fontWeight: 'bold' }}
                             />
                             <Area
                                 type="monotone"
