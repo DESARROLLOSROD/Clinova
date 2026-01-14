@@ -46,17 +46,17 @@ export function CalendarView({ appointments, currentDate, onDateChange, onAppoin
     }
 
     return (
-        <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden transition-colors">
             {/* Header Navigation */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
                 <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => navigateWeek('prev')}>
+                    <Button variant="ghost" size="sm" onClick={() => navigateWeek('prev')} className="dark:text-gray-400 dark:hover:text-gray-100">
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <h2 className="text-lg font-semibold text-gray-900 capitalize">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 capitalize">
                         {format(currentDate, 'MMMM yyyy', { locale: es })}
                     </h2>
-                    <Button variant="ghost" size="sm" onClick={() => navigateWeek('next')}>
+                    <Button variant="ghost" size="sm" onClick={() => navigateWeek('next')} className="dark:text-gray-400 dark:hover:text-gray-100">
                         <ChevronRight className="h-4 w-4" />
                     </Button>
                 </div>
@@ -67,32 +67,32 @@ export function CalendarView({ appointments, currentDate, onDateChange, onAppoin
 
             <div className="flex flex-1 overflow-auto">
                 {/* Time Labels */}
-                <div className="w-16 flex-shrink-0 bg-gray-50 border-r border-gray-100">
-                    <div className="h-10 border-b border-gray-100 bg-gray-50"></div> {/* Header Spacer */}
+                <div className="w-16 flex-shrink-0 bg-gray-50 dark:bg-gray-800/30 border-r border-gray-100 dark:border-gray-800">
+                    <div className="h-10 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30"></div> {/* Header Spacer */}
                     {hours.map((hour) => (
-                        <div key={hour} className="border-b border-gray-100 text-xs text-gray-500 text-right pr-2 sticky left-0" style={{ height: `${HOUR_HEIGHT}px` }}>
+                        <div key={hour} className="border-b border-gray-100 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-500 text-right pr-2 sticky left-0" style={{ height: `${HOUR_HEIGHT}px` }}>
                             <span className="-top-2 relative">{format(addHours(startOfDay(new Date()), hour), 'h a')}</span>
                         </div>
                     ))}
                 </div>
 
                 {/* Days Grid */}
-                <div className="flex-1 grid grid-cols-7 divide-x divide-gray-100 min-w-[800px]">
+                <div className="flex-1 grid grid-cols-7 divide-x divide-gray-100 dark:divide-gray-800 min-w-[800px]">
                     {days.map((day) => (
                         <div key={day.toISOString()} className="flex flex-col">
                             {/* Day Header */}
-                            <div className="h-10 flex flex-col items-center justify-center border-b border-gray-100 bg-gray-50 sticky top-0 z-10">
-                                <span className="text-xs font-medium text-gray-500 capitalize">{format(day, 'EEE', { locale: es })}</span>
-                                <span className={`text-sm font-bold ${day.toDateString() === new Date().toDateString() ? 'text-blue-600' : 'text-gray-900'}`}>
+                            <div className="h-10 flex flex-col items-center justify-center border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30 sticky top-0 z-10">
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 capitalize">{format(day, 'EEE', { locale: es })}</span>
+                                <span className={`text-sm font-bold ${day.toDateString() === new Date().toDateString() ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'}`}>
                                     {format(day, 'd')}
                                 </span>
                             </div>
 
                             {/* Day Column */}
-                            <div className="relative flex-1 bg-white" style={{ height: `${hours.length * HOUR_HEIGHT}px` }}>
+                            <div className="relative flex-1 bg-white dark:bg-gray-900" style={{ height: `${hours.length * HOUR_HEIGHT}px` }}>
                                 {/* Grid Lines */}
                                 {hours.map((hour) => (
-                                    <div key={hour} className="border-b border-gray-50 absolute w-full" style={{ top: `${(hour - START_HOUR) * HOUR_HEIGHT}px` }}></div>
+                                    <div key={hour} className="border-b border-gray-50 dark:border-gray-800/50 absolute w-full" style={{ top: `${(hour - START_HOUR) * HOUR_HEIGHT}px` }}></div>
                                 ))}
 
                                 {/* Appointments */}

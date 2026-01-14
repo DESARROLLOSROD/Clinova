@@ -41,8 +41,8 @@ export default async function AgendaPage({
         <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Agenda</h1>
-                    <p className="text-gray-600 text-sm">Gestiona las citas y sesiones.</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Agenda</h1>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">Gestiona las citas y sesiones.</p>
                 </div>
                 <Link href="/dashboard/agenda/nueva">
                     <Button className="gap-2">

@@ -12,10 +12,10 @@ interface PatientListProps {
 
 export function PatientList({ initialPatients }: PatientListProps) {
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden transition-colors">
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
+                    <thead className="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-100 dark:border-gray-800">
                         <tr>
                             <th className="px-6 py-4">Nombre</th>
                             <th className="px-6 py-4">Contacto</th>
@@ -23,34 +23,34 @@ export function PatientList({ initialPatients }: PatientListProps) {
                             <th className="px-6 py-4 text-right">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                         {initialPatients.length === 0 ? (
                             <tr>
-                                <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                                <td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                                     No hay pacientes registrados.
                                 </td>
                             </tr>
                         ) : (
                             initialPatients.map((patient) => (
-                                <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
+                                <tr key={patient.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                     <td className="px-6 py-4">
-                                        <div className="font-medium text-gray-900">
+                                        <div className="font-medium text-gray-900 dark:text-gray-100">
                                             {patient.first_name} {patient.last_name}
                                         </div>
                                         {patient.date_of_birth && (
-                                            <div className="text-xs text-gray-500">
+                                            <div className="text-xs text-gray-500 dark:text-gray-500">
                                                 {new Date(patient.date_of_birth).toLocaleDateString()}
                                             </div>
                                         )}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="text-gray-900">{patient.email}</div>
-                                        <div className="text-gray-500 text-xs">{patient.phone}</div>
+                                        <div className="text-gray-900 dark:text-gray-100">{patient.email}</div>
+                                        <div className="text-gray-500 dark:text-gray-500 text-xs">{patient.phone}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${patient.active
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-red-100 text-red-800'
+                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
+                                            : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
                                             }`}>
                                             {patient.active ? 'Activo' : 'Inactivo'}
                                         </span>

@@ -148,7 +148,7 @@ export function SessionList({ initialSessions, patients, therapists }: SessionLi
       </Card>
 
       {/* Results Count */}
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-gray-600 dark:text-gray-400">
         {filteredSessions.length} sesión{filteredSessions.length !== 1 ? 'es' : ''} encontrada
         {filteredSessions.length !== 1 ? 's' : ''}
       </div>
@@ -157,12 +157,12 @@ export function SessionList({ initialSessions, patients, therapists }: SessionLi
       <div className="space-y-4">
         {filteredSessions.length === 0 ? (
           <Card>
-            <CardContent className="p-12 text-center text-gray-500">
+            <CardContent className="p-12 text-center text-gray-500 dark:text-gray-400">
               {searchTerm ||
-              selectedPatient !== 'all' ||
-              selectedTherapist !== 'all' ||
-              dateFrom ||
-              dateTo
+                selectedPatient !== 'all' ||
+                selectedTherapist !== 'all' ||
+                dateFrom ||
+                dateTo
                 ? 'No se encontraron sesiones con los filtros aplicados.'
                 : 'No hay sesiones registradas.'}
             </CardContent>
@@ -170,22 +170,22 @@ export function SessionList({ initialSessions, patients, therapists }: SessionLi
         ) : (
           filteredSessions.map((session) => (
             <Link key={session.id} href={`/dashboard/sesiones/${session.id}`}>
-              <Card className="hover:shadow-md transition-all hover:border-blue-200 cursor-pointer">
+              <Card className="hover:shadow-md transition-all hover:border-blue-200 dark:hover:border-blue-800 cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       {/* Header */}
                       <div className="flex items-center gap-4 mb-3">
                         <div className="flex items-center gap-2">
-                          <User size={16} className="text-gray-400" />
-                          <span className="font-semibold text-gray-900">
+                          <User size={16} className="text-gray-400 dark:text-gray-500" />
+                          <span className="font-semibold text-gray-900 dark:text-gray-100">
                             {session.patient?.first_name} {session.patient?.last_name}
                           </span>
                         </div>
 
                         {session.therapist && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Stethoscope size={14} className="text-gray-400" />
+                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <Stethoscope size={14} className="text-gray-400 dark:text-gray-500" />
                             <span>
                               {session.therapist.first_name} {session.therapist.last_name}
                             </span>
@@ -193,8 +193,8 @@ export function SessionList({ initialSessions, patients, therapists }: SessionLi
                         )}
 
                         {session.appointment?.appointment_date && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Calendar size={14} className="text-gray-400" />
+                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <Calendar size={14} className="text-gray-400 dark:text-gray-500" />
                             <span>
                               {new Date(session.appointment.appointment_date).toLocaleDateString(
                                 'es-MX'
@@ -207,37 +207,37 @@ export function SessionList({ initialSessions, patients, therapists }: SessionLi
                       {/* SOAP Notes Preview */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Subjetivo</p>
-                          <p className="text-sm text-gray-700 line-clamp-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Subjetivo</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
                             {session.subjective || 'N/A'}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Objetivo</p>
-                          <p className="text-sm text-gray-700 line-clamp-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Objetivo</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
                             {session.objective || 'N/A'}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Evaluación</p>
-                          <p className="text-sm text-gray-700 line-clamp-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Evaluación</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
                             {session.assessment || 'N/A'}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Plan</p>
-                          <p className="text-sm text-gray-700 line-clamp-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Plan</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
                             {session.plan || 'N/A'}
                           </p>
                         </div>
                       </div>
 
                       {/* Footer */}
-                      <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-4 pt-3 border-t border-gray-100 dark:border-gray-800">
                         {session.pain_level !== null && session.pain_level !== undefined && (
-                          <Badge variant="outline">Dolor: {session.pain_level}/10</Badge>
+                          <Badge variant="outline" className="dark:border-gray-700 dark:text-gray-300">Dolor: {session.pain_level}/10</Badge>
                         )}
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-500">
                           Registrado el{' '}
                           {new Date(session.created_at).toLocaleDateString('es-MX', {
                             year: 'numeric',
