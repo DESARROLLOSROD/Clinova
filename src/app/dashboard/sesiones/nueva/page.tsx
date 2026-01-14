@@ -31,6 +31,7 @@ export default async function NewSessionPage({
         <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-100">
             <SOAPForm
                 appointmentId={appointmentId}
+                patientId={appointment.patients.id}
                 patientName={`${appointment.patients.first_name} ${appointment.patients.last_name}`}
             />
         </div>

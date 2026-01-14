@@ -5,17 +5,20 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Activity } from 'lucide-react'
+import { BodyMap, type BodyMark } from '@/components/shared/BodyMap'
 
 interface SOAPFormProps {
     appointmentId: string
+    patientId: string
     patientName: string
 }
 
-export function SOAPForm({ appointmentId, patientName }: SOAPFormProps) {
+export function SOAPForm({ appointmentId, patientId, patientName }: SOAPFormProps) {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [marks, setMarks] = useState<BodyMark[]>([])
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -26,6 +29,7 @@ export function SOAPForm({ appointmentId, patientName }: SOAPFormProps) {
 
         const sessionData = {
             appointment_id: appointmentId,
+            patient_id: patientId, // Added patient_id
             subjective: formData.get('subjective') as string,
             objective: formData.get('objective') as string,
             assessment: formData.get('assessment') as string,
@@ -34,8 +38,33 @@ export function SOAPForm({ appointmentId, patientName }: SOAPFormProps) {
         }
 
         try {
-            const { error: sessionError } = await supabase.from('sessions').insert([sessionData])
+            // 1. Insert session
+            const { data: session, error: sessionError } = await supabase
+                .from('sessions')
+                .insert([sessionData])
+                .select()
+                .single()
+
             if (sessionError) throw sessionError
+
+            // 2. Insert body marks if any
+            if (marks.length > 0) {
+                const marksToInsert = marks.map(m => ({
+                    session_id: session.id,
+                    patient_id: patientId,
+                    x_pos: m.x_pos,
+                    y_pos: m.y_pos,
+                    side: m.side,
+                    mark_type: m.mark_type,
+                    notes: m.notes
+                }))
+
+                const { error: marksError } = await supabase
+                    .from('session_body_marks')
+                    .insert(marksToInsert)
+
+                if (marksError) throw marksError
+            }
 
             // Mark appointment as completed
             await supabase.from('appointments').update({ status: 'completed' }).eq('id', appointmentId)
@@ -104,6 +133,22 @@ export function SOAPForm({ appointmentId, patientName }: SOAPFormProps) {
                         required
                         className="w-full min-h-[120px] rounded-xl border-2 border-gray-100 p-3 text-sm focus:border-blue-500 focus:outline-none"
                         placeholder="Ejercicios de fortalecimiento..."
+                    />
+                </div>
+            </div>
+
+            <div className="border-y py-6 bg-slate-50/50 -mx-8 px-8">
+                <h3 className="text-lg font-medium flex items-center gap-2 mb-4">
+                    <Activity className="text-blue-600" size={20} />
+                    Evaluación Visual del Cuerpo
+                </h3>
+                <p className="text-sm text-slate-500 mb-4">
+                    Marca los puntos de dolor, tensión o lesiones detectadas en la sesión.
+                </p>
+                <div className="bg-white rounded-xl border p-4 shadow-sm">
+                    <BodyMap
+                        onMarksChange={setMarks}
+                        initialMarks={marks}
                     />
                 </div>
             </div>
