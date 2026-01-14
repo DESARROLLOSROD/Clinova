@@ -146,9 +146,9 @@ export function Sidebar() {
     });
 
     return (
-        <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
-            <div className="flex h-16 items-center px-6 border-b border-gray-100">
-                <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-xl text-gray-900">
+        <div className="flex h-full w-64 flex-col bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 transition-colors">
+            <div className="flex h-16 items-center px-6 border-b border-gray-100 dark:border-gray-800">
+                <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-xl text-gray-900 dark:text-gray-100">
                     <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
                         <Stethoscope className="h-5 w-5 text-white" />
                     </div>
@@ -166,14 +166,14 @@ export function Sidebar() {
                                 className={cn(
                                     "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                                     isActive
-                                        ? "bg-blue-50 text-blue-700"
-                                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+                                        : "text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
                                 )}
                             >
                                 <item.icon
                                     className={cn(
                                         "h-5 w-5 shrink-0 transition-colors",
-                                        isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-600"
+                                        isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"
                                     )}
                                 />
                                 {item.name}
@@ -182,11 +182,11 @@ export function Sidebar() {
                     })}
                 </nav>
             </div>
-            <div className="border-t border-gray-100 p-4">
-                <div className="rounded-xl bg-blue-50 p-4">
-                    <h4 className="text-sm font-semibold text-blue-900">Plan Profesional</h4>
-                    <p className="mt-1 text-xs text-blue-700">Tu licencia expira en 30 días</p>
-                    <button className="mt-3 text-xs font-medium text-blue-700 hover:text-blue-800 hover:underline">
+            <div className="border-t border-gray-100 dark:border-gray-800 p-4">
+                <div className="rounded-xl bg-blue-50 dark:bg-blue-900/10 p-4">
+                    <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300">Plan Profesional</h4>
+                    <p className="mt-1 text-xs text-blue-700 dark:text-blue-400">Tu licencia expira en 30 días</p>
+                    <button className="mt-3 text-xs font-medium text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">
                         Renovar ahora
                     </button>
                 </div>
