@@ -42,10 +42,10 @@ export function LoginForm() {
     return (
         <div className="w-full max-w-md space-y-8">
             <div className="text-center">
-                <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+                <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
                     Bienvenido a Clinova
                 </h2>
-                <p className="mt-2 text-sm text-gray-600">
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     Inicia sesión para gestionar tu clínica
                 </p>
             </div>
@@ -81,7 +81,7 @@ export function LoginForm() {
                 </div>
 
                 {error && (
-                    <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 animate-in fade-in slide-in-from-top-2">
+                    <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400 animate-in fade-in slide-in-from-top-2">
                         {error}
                     </div>
                 )}

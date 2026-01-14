@@ -43,16 +43,16 @@ export function SignupForm() {
     return (
         <div className="w-full max-w-md space-y-8">
             <div className="text-center">
-                <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+                <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
                     Crear una cuenta
                 </h2>
-                <p className="mt-2 text-sm text-gray-600">
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     Regístrate para empezar a usar Clinova
                 </p>
             </div>
 
             {success ? (
-                <div className="rounded-lg bg-green-50 p-4 text-sm text-green-700">
+                <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-4 text-sm text-green-700 dark:text-green-400">
                     <p>¡Cuenta creada exitosamente! Revisa tu correo para verificar tu cuenta.</p>
                 </div>
             ) : (
@@ -87,7 +87,7 @@ export function SignupForm() {
                     </div>
 
                     {error && (
-                        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 animate-in fade-in slide-in-from-top-2">
+                        <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400 animate-in fade-in slide-in-from-top-2">
                             {error}
                         </div>
                     )}
