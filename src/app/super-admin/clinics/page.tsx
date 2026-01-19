@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Search, Building2, Users, Calendar } from 'lucide-react'
+import { Plus, Search, Building2, Users, Calendar, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import { differenceInDays, parseISO } from 'date-fns'
 
 interface Clinic {
     id: string
@@ -18,6 +19,7 @@ interface Clinic {
     subscription_tier: string
     created_at: string
     is_active: boolean
+    next_payment_date: string | null
     _count?: {
         users: number
         patients: number
@@ -136,15 +138,35 @@ export default function ClinicsPage() {
                             </div>
                             <span
                                 className={`px-2 py-1 rounded-full text-xs font-medium ${clinic.subscription_status === 'active'
-                                        ? 'bg-green-100 text-green-800'
-                                        : clinic.subscription_status === 'trial'
-                                            ? 'bg-orange-100 text-orange-800'
-                                            : 'bg-gray-100 text-gray-800'
+                                    ? 'bg-green-100 text-green-800'
+                                    : clinic.subscription_status === 'trial'
+                                        ? 'bg-orange-100 text-orange-800'
+                                        : 'bg-gray-100 text-gray-800'
                                     }`}
                             >
                                 {clinic.subscription_status}
+                                {clinic.subscription_status}
                             </span>
                         </div>
+
+                        {/* Renewal Countdown Badge */}
+                        {clinic.next_payment_date && (
+                            <div className={`mb-4 p-2 rounded-lg flex items-center gap-2 text-sm font-medium ${(() => {
+                                const days = differenceInDays(parseISO(clinic.next_payment_date), new Date())
+                                if (days < 3) return 'bg-red-100 text-red-700'
+                                if (days < 15) return 'bg-orange-100 text-orange-700'
+                                return 'bg-green-100 text-green-700'
+                            })()
+                                }`}>
+                                <Calendar className="h-4 w-4" />
+                                {(() => {
+                                    const days = differenceInDays(parseISO(clinic.next_payment_date), new Date())
+                                    if (days < 0) return `Venció hace ${Math.abs(days)} días`
+                                    if (days === 0) return 'Vence hoy'
+                                    return `Renovación en ${days} días`
+                                })()}
+                            </div>
+                        )}
 
                         <div className="space-y-2 mb-4">
                             {clinic.email && (

@@ -18,7 +18,9 @@ import {
 } from 'lucide-react'
 import { cn } from '@/components/ui/button'
 import { useUser, Permission } from '@/contexts/UserContext'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { differenceInDays, parseISO } from 'date-fns'
+import { createClient } from '@/utils/supabase/client'
 
 interface NavigationItem {
     name: string
@@ -94,6 +96,25 @@ const navigation: NavigationItem[] = [
 export function Sidebar() {
     const pathname = usePathname()
     const { can, loading, profile } = useUser()
+    const [clinicSubscription, setClinicSubscription] = useState<{ next_payment_date: string | null, subscription_tier: string } | null>(null)
+    const supabase = createClient()
+
+    useEffect(() => {
+        if (profile?.clinic_id) {
+            const fetchClinicData = async () => {
+                const { data } = await supabase
+                    .from('clinics')
+                    .select('next_payment_date, subscription_tier')
+                    .eq('id', profile.clinic_id)
+                    .single()
+
+                if (data) {
+                    setClinicSubscription(data)
+                }
+            }
+            fetchClinicData()
+        }
+    }, [profile?.clinic_id])
 
     if (loading) {
         return (
@@ -183,12 +204,51 @@ export function Sidebar() {
                 </nav>
             </div>
             <div className="border-t border-gray-100 dark:border-gray-800 p-4">
-                <div className="rounded-xl bg-blue-50 dark:bg-blue-900/10 p-4">
-                    <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300">Plan Profesional</h4>
-                    <p className="mt-1 text-xs text-blue-700 dark:text-blue-400">Tu licencia expira en 30 días</p>
-                    <button className="mt-3 text-xs font-medium text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">
-                        Renovar ahora
-                    </button>
+                <div className="border-t border-gray-100 dark:border-gray-800 p-4">
+                    {clinicSubscription ? (
+                        <div className={`rounded-xl p-4 ${(() => {
+                                if (!clinicSubscription.next_payment_date) return 'bg-blue-50 dark:bg-blue-900/10'
+                                const days = differenceInDays(parseISO(clinicSubscription.next_payment_date), new Date())
+                                if (days < 3) return 'bg-red-50 dark:bg-red-900/10 border-red-100'
+                                if (days < 15) return 'bg-orange-50 dark:bg-orange-900/10 border-orange-100'
+                                return 'bg-blue-50 dark:bg-blue-900/10'
+                            })()
+                            }`}>
+                            <h4 className="text-sm font-semibold capitalize text-gray-900 dark:text-gray-100">Plan {clinicSubscription.subscription_tier}</h4>
+                            <p className={`mt-1 text-xs font-medium ${(() => {
+                                    if (!clinicSubscription.next_payment_date) return 'text-gray-500'
+                                    const days = differenceInDays(parseISO(clinicSubscription.next_payment_date), new Date())
+                                    if (days < 3) return 'text-red-600'
+                                    if (days < 15) return 'text-orange-600'
+                                    return 'text-blue-600 dark:text-blue-400'
+                                })()
+                                }`}>
+                                {(() => {
+                                    if (!clinicSubscription.next_payment_date) return 'Suscripción activa'
+                                    const days = differenceInDays(parseISO(clinicSubscription.next_payment_date), new Date())
+                                    if (days < 0) return `Venció hace ${Math.abs(days)} días`
+                                    if (days === 0) return 'Vence hoy'
+                                    return `Tu licencia expira en ${days} días`
+                                })()}
+                            </p>
+                            {(() => {
+                                const days = clinicSubscription.next_payment_date ? differenceInDays(parseISO(clinicSubscription.next_payment_date), new Date()) : 30
+                                if (days < 15) {
+                                    return (
+                                        <button className="mt-3 text-xs font-bold text-red-600 hover:text-red-700 hover:underline">
+                                            Renovar ahora
+                                        </button>
+                                    )
+                                }
+                                return null
+                            })()}
+                        </div>
+                    ) : (
+                        <div className="rounded-xl bg-gray-50 dark:bg-gray-800 p-4 animate-pulse">
+                            <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+                            <div className="h-3 bg-gray-200 rounded w-full"></div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
