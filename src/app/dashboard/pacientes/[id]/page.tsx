@@ -126,6 +126,39 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
     no_show: 'bg-orange-100 text-orange-800',
   };
 
+  // Fetch Clinic Data for Receipts
+  let clinicData = null;
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('clinic_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.clinic_id) {
+      const { data: clinic } = await supabase
+        .from('clinics')
+        .select('*')
+        .eq('id', profile.clinic_id)
+        .single();
+
+      if (clinic) {
+        clinicData = {
+          name: clinic.name,
+          logo_url: clinic.logo_url,
+          address: clinic.address,
+          city: clinic.city,
+          phone: clinic.phone,
+          email: clinic.clinic_email, // Note: settings.ts implies clinic_email, check if clinics table has 'email' or 'clinic_email'. Usually 'clinics' table cols match what I saw in page.tsx config.
+          // Looking at config page, it uses clinicData.name, phone, address, website...
+          website: clinic.website
+        };
+      }
+    }
+  }
+
   // Prepare data for Chart
   const evolutionData = (sessions || [])
     .filter(s => s.pain_level !== null)
@@ -264,6 +297,7 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
         <PaymentHistory
           payments={payments || []}
           patientName={`${patient.first_name} ${patient.last_name}`}
+          clinicData={clinicData || undefined}
         />
       </div>
 

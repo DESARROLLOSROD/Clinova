@@ -15,12 +15,23 @@ interface Payment {
     sessions: { id: string } | null;
 }
 
+interface ClinicData {
+    name: string;
+    logo_url?: string;
+    address?: string;
+    city?: string;
+    phone?: string;
+    email?: string;
+    website?: string;
+}
+
 interface PaymentHistoryProps {
     payments: Payment[];
     patientName: string;
+    clinicData?: ClinicData;
 }
 
-export function PaymentHistory({ payments, patientName }: PaymentHistoryProps) {
+export function PaymentHistory({ payments, patientName, clinicData }: PaymentHistoryProps) {
     const methodLabels: Record<string, string> = {
         cash: 'Efectivo',
         card: 'Tarjeta',
@@ -42,8 +53,8 @@ export function PaymentHistory({ payments, patientName }: PaymentHistoryProps) {
         refunded: 'bg-gray-100 text-gray-800',
     };
 
-    const handleDownload = (payment: Payment) => {
-        generateReceipt({
+    const handleDownload = async (payment: Payment) => {
+        await generateReceipt({
             id: payment.id,
             amount: payment.amount,
             method: methodLabels[payment.method] || payment.method,
@@ -51,7 +62,8 @@ export function PaymentHistory({ payments, patientName }: PaymentHistoryProps) {
             payment_date: payment.payment_date,
             invoice_number: payment.invoice_number,
             patientName: patientName,
-            concept: payment.sessions ? 'Pago de Sesión de Fisioterapia' : 'Pago de Servicios Clínicos'
+            concept: payment.sessions ? 'Pago de Sesión de Fisioterapia' : 'Pago de Servicios Clínicos',
+            clinic: clinicData
         });
     };
 
