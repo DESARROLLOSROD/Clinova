@@ -6,8 +6,11 @@ import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PatientSelect } from '@/components/patients/PatientSelect'
 import { TherapistSelect } from '@/components/therapists/TherapistSelect'
+import { toast } from 'sonner'
+import { addDays, addWeeks } from 'date-fns'
 
 export default function NewAppointmentPage() {
     const router = useRouter()
@@ -20,6 +23,10 @@ export default function NewAppointmentPage() {
     const [error, setError] = useState<string | null>(null)
     const [therapistId, setTherapistId] = useState<string>('')
 
+    // Recurrence State
+    const [recurrence, setRecurrence] = useState<'none' | 'weekly' | 'biweekly'>('none')
+    const [occurrences, setOccurrences] = useState<number>(1)
+
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         setIsLoading(true)
@@ -30,29 +37,46 @@ export default function NewAppointmentPage() {
         const date = formData.get('date') as string
         const time = formData.get('time') as string
         const duration = 60 // Default 1 hour for now
-
-        // Construct simplified timestamps
-        // Note: detailed timezone handling is complex; for MVP we assume local browser time implies local clinic time.
-        const startDateTime = new Date(`${date}T${time}`)
-        const endDateTime = new Date(startDateTime.getTime() + duration * 60000)
-
-        const appointmentData = {
-            patient_id: formData.get('patient_id') as string,
-            therapist_id: therapistId || null,
-            start_time: startDateTime.toISOString(),
-            end_time: endDateTime.toISOString(),
-            notes: formData.get('notes') as string,
-            status: 'scheduled'
-        }
+        const notes = formData.get('notes') as string
+        const patientId = formData.get('patient_id') as string
 
         try {
-            const { error } = await supabase.from('appointments').insert([appointmentData])
+            const baseStartDate = new Date(`${date}T${time}`)
+            const appointmentsToCreate = []
+
+            const count = recurrence === 'none' ? 1 : occurrences
+
+            for (let i = 0; i < count; i++) {
+                let currentStartDate = new Date(baseStartDate)
+
+                if (recurrence === 'weekly') {
+                    currentStartDate = addWeeks(baseStartDate, i)
+                } else if (recurrence === 'biweekly') {
+                    currentStartDate = addWeeks(baseStartDate, i * 2)
+                }
+
+                const currentEndDate = new Date(currentStartDate.getTime() + duration * 60000)
+
+                appointmentsToCreate.push({
+                    patient_id: patientId,
+                    therapist_id: therapistId || null,
+                    start_time: currentStartDate.toISOString(),
+                    end_time: currentEndDate.toISOString(),
+                    notes: notes,
+                    status: 'scheduled',
+                    title: recurrence !== 'none' ? `Sesión ${i + 1}/${count}` : undefined
+                })
+            }
+
+            const { error } = await supabase.from('appointments').insert(appointmentsToCreate)
             if (error) throw error
 
+            toast.success(recurrence === 'none' ? 'Cita agendada' : `${count} citas agendadas correctamente`)
             router.push('/dashboard/agenda')
             router.refresh()
         } catch (err: any) {
             setError(err.message)
+            toast.error('Error al agendar la cita')
         } finally {
             setIsLoading(false)
         }
@@ -84,6 +108,46 @@ export default function NewAppointmentPage() {
                     </div>
                 </div>
 
+                {/* Recurrence Options */}
+                <div className="bg-blue-50 p-4 rounded-lg space-y-4 border border-blue-100">
+                    <div>
+                        <Label className="text-blue-900">Repetición</Label>
+                        <Select
+                            value={recurrence}
+                            onValueChange={(val: any) => setRecurrence(val)}
+                        >
+                            <SelectTrigger className="bg-white border-blue-200">
+                                <SelectValue placeholder="Sin repetición" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">No repetir (Solo una vez)</SelectItem>
+                                <SelectItem value="weekly">Semanalmente (Mismo día/hora)</SelectItem>
+                                <SelectItem value="biweekly">Quincenalmente (Cada 2 semanas)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {recurrence !== 'none' && (
+                        <div>
+                            <Label className="text-blue-900">Cantidad de Sesiones</Label>
+                            <div className="flex items-center gap-2 mt-1">
+                                <Input
+                                    type="number"
+                                    min="2"
+                                    max="20"
+                                    value={occurrences}
+                                    onChange={(e) => setOccurrences(parseInt(e.target.value))}
+                                    className="w-24 bg-white border-blue-200"
+                                />
+                                <span className="text-sm text-blue-700">sesiones en total</span>
+                            </div>
+                            <p className="text-xs text-blue-600 mt-2">
+                                Se crearán {occurrences} citas: {recurrence === 'weekly' ? 'una cada semana' : 'una cada 2 semanas'}.
+                            </p>
+                        </div>
+                    )}
+                </div>
+
                 <div>
                     <Label htmlFor="notes">Notas (Opcional)</Label>
                     <Input name="notes" id="notes" placeholder="Motivo de la consulta..." />
@@ -105,7 +169,9 @@ export default function NewAppointmentPage() {
                         Cancelar
                     </Button>
                     <Button type="submit" isLoading={isLoading}>
-                        Agendar Cita
+                        {recurrence !== 'none'
+                            ? `Agendar ${occurrences} Citas`
+                            : 'Agendar Cita'}
                     </Button>
                 </div>
             </form>

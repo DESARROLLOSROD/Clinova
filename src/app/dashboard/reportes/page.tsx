@@ -1,5 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
-import { BarChart3, TrendingUp, Users, DollarSign, Calendar, Activity } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Calendar, Activity, TrendingDown } from 'lucide-react';
+import { StatsCharts } from '@/components/dashboard/StatsCharts';
+import { KPICard } from '@/components/dashboard/KPICard';
 
 export const dynamic = 'force-dynamic';
 
@@ -124,100 +126,81 @@ export default async function ReportsPage() {
       : 0;
 
   return (
-    <div className="space-y-6 transition-colors">
+    <div className="space-y-8 transition-colors pb-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Reportes y Estadísticas</h1>
-        <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-          Análisis del rendimiento de tu clínica
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Reportes y Estadísticas</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
+          Visión general del rendimiento de tu clínica y métricas clave.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Pacientes</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{totalPatients || 0}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{activePatients} activos</p>
-            </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Users className="text-blue-600 dark:text-blue-400" size={24} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Citas Este Mes</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-                {appointmentsThisMonth || 0}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                {completionRate.toFixed(0)}% completadas
-              </p>
-            </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-              <Calendar className="text-purple-600 dark:text-purple-400" size={24} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Sesiones Este Mes</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{sessionsThisMonth || 0}</p>
-              <p
-                className={`text-xs mt-1 ${sessionGrowth >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-              >
-                {sessionGrowth >= 0 ? '+' : ''}
-                {sessionGrowth.toFixed(1)}% vs mes anterior
-              </p>
-            </div>
-            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-              <Activity className="text-indigo-600 dark:text-indigo-400" size={24} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Ingresos Este Mes</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
-                ${totalRevenueThisMonth.toFixed(2)}
-              </p>
-              <p
-                className={`text-xs mt-1 ${revenueGrowth >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-              >
-                {revenueGrowth >= 0 ? '+' : ''}
-                {revenueGrowth.toFixed(1)}% vs mes anterior
-              </p>
-            </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <DollarSign className="text-green-600 dark:text-green-400" size={24} />
-            </div>
-          </div>
-        </div>
+      {/* KPIs Principales */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <KPICard
+          title="Total Pacientes"
+          value={totalPatients || 0}
+          subValue={`${activePatients} activos`}
+          icon={Users}
+          color="blue"
+          trend={{
+            value: patientGrowth,
+            positive: true
+          }}
+        />
+        <KPICard
+          title="Citas (Mes)"
+          value={appointmentsThisMonth || 0}
+          subValue={`${completionRate.toFixed(0)}% completadas`}
+          icon={Calendar}
+          color="purple"
+        />
+        <KPICard
+          title="Sesiones (Mes)"
+          value={sessionsThisMonth || 0}
+          icon={Activity}
+          color="indigo"
+          trend={{
+            value: sessionGrowth,
+            positive: true
+          }}
+        />
+        <KPICard
+          title="Ingresos (Mes)"
+          value={`$${totalRevenueThisMonth.toLocaleString()}`}
+          icon={DollarSign}
+          color="green"
+          trend={{
+            value: revenueGrowth,
+            positive: true
+          }}
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Gráficos Principales */}
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Análisis Visual</h2>
+        <StatsCharts />
+      </div>
+
+      {/* Secciones de Detalle */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Tendencias de Pacientes */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 transition-colors">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-            <TrendingUp className="text-blue-600 dark:text-blue-400" size={20} />
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 transition-colors">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <TrendingUp className="text-blue-600 dark:text-blue-400" size={20} />
+            </div>
             Crecimiento de Pacientes
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Nuevos Este Mes</span>
-                <span className="font-semibold text-gray-900 dark:text-gray-100">{newPatientsThisMonth || 0}</span>
+                <span className="text-base text-gray-600 dark:text-gray-400">Nuevos Este Mes</span>
+                <span className="font-bold text-gray-900 dark:text-gray-100">{newPatientsThisMonth || 0}</span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2">
+              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3">
                 <div
-                  className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full"
+                  className="bg-blue-600 dark:bg-blue-500 h-3 rounded-full transition-all duration-1000"
                   style={{
                     width: `${Math.min(((newPatientsThisMonth || 0) / (totalPatients || 1)) * 100, 100)}%`,
                   }}
@@ -227,12 +210,12 @@ export default async function ReportsPage() {
 
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Mes Anterior</span>
-                <span className="font-semibold text-gray-900 dark:text-gray-100">{newPatientsLastMonth || 0}</span>
+                <span className="text-base text-gray-600 dark:text-gray-400">Mes Anterior</span>
+                <span className="font-bold text-gray-900 dark:text-gray-100">{newPatientsLastMonth || 0}</span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2">
+              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3">
                 <div
-                  className="bg-gray-400 dark:bg-gray-600 h-2 rounded-full"
+                  className="bg-gray-400 dark:bg-gray-600 h-3 rounded-full transition-all duration-1000"
                   style={{
                     width: `${Math.min(((newPatientsLastMonth || 0) / (totalPatients || 1)) * 100, 100)}%`,
                   }}
@@ -240,102 +223,57 @@ export default async function ReportsPage() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Tasa de Crecimiento</p>
-              <p
-                className={`text-2xl font-bold ${patientGrowth >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+            <div className="pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Tasa de Crecimiento</span>
+              <span
+                className={`text-2xl font-bold flex items-center gap-1 ${patientGrowth >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
               >
-                {patientGrowth >= 0 ? '+' : ''}
-                {patientGrowth.toFixed(1)}%
-              </p>
+                {patientGrowth >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                {Math.abs(patientGrowth).toFixed(1)}%
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Estado de Citas */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 transition-colors">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-            <BarChart3 className="text-purple-600 dark:text-purple-400" size={20} />
-            Estado de Citas (Últimos 3 Meses)
+        {/* Resumen Financiero */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 transition-colors">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-3">
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <DollarSign className="text-green-600 dark:text-green-400" size={20} />
+            </div>
+            Resumen Financiero
           </h2>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Completadas</span>
-                <span className="font-semibold text-green-600 dark:text-green-400">{completedAppointments || 0}</span>
+          <div className="space-y-6">
+            <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Ingresos Este Mes</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                  ${totalRevenueThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2">
-                <div
-                  className="bg-green-600 dark:bg-green-500 h-2 rounded-full"
-                  style={{
-                    width: `${completionRate}%`,
-                  }}
-                />
+              <div className={`text-sm font-medium ${revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {revenueGrowth > 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%
               </div>
             </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Canceladas</span>
-                <span className="font-semibold text-red-600 dark:text-red-400">{cancelledAppointments || 0}</span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2">
-                <div
-                  className="bg-red-600 dark:bg-red-500 h-2 rounded-full"
-                  style={{
-                    width: `${((cancelledAppointments || 0) / ((completedAppointments || 0) + (cancelledAppointments || 0) + (noShowAppointments || 0) || 1)) * 100}%`,
-                  }}
-                />
+            <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Ingresos Mes Anterior</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                  ${totalRevenueLastMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
               </div>
             </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">No Asistieron</span>
-                <span className="font-semibold text-orange-600 dark:text-orange-400">{noShowAppointments || 0}</span>
+            <div className="flex justify-between items-center p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 rounded-xl">
+              <div>
+                <p className="text-sm text-amber-800 dark:text-amber-400 font-medium">Pagos Pendientes</p>
+                <p className="text-2xl font-bold text-amber-700 dark:text-amber-500 mt-1">
+                  ${totalPendingPayments.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2">
-                <div
-                  className="bg-orange-600 dark:bg-orange-500 h-2 rounded-full"
-                  style={{
-                    width: `${((noShowAppointments || 0) / ((completedAppointments || 0) + (cancelledAppointments || 0) + (noShowAppointments || 0) || 1)) * 100}%`,
-                  }}
-                />
-              </div>
+              <DollarSign className="text-amber-500 dark:text-amber-400 opacity-50" size={24} />
             </div>
-
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Tasa de Asistencia</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{completionRate.toFixed(1)}%</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Resumen Financiero */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 transition-colors">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-          <DollarSign className="text-green-600 dark:text-green-400" size={20} />
-          Resumen Financiero
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Ingresos Este Mes</p>
-            <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">
-              ${totalRevenueThisMonth.toFixed(2)}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Ingresos Mes Anterior</p>
-            <p className="text-3xl font-bold text-gray-600 dark:text-gray-400 mt-2">
-              ${totalRevenueLastMonth.toFixed(2)}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Pagos Pendientes</p>
-            <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-2">
-              ${totalPendingPayments.toFixed(2)}
-            </p>
           </div>
         </div>
       </div>

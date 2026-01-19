@@ -1,17 +1,126 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
-import { ArrowLeft, Activity } from 'lucide-react'
+import { ArrowLeft, Activity, Mic, MicOff, Loader2 } from 'lucide-react'
 import { BodyMap, type BodyMark } from '@/components/shared/BodyMap'
+
+// Type definition for SpeechRecognition
+interface IWindow extends Window {
+    webkitSpeechRecognition: any
+    SpeechRecognition: any
+}
 
 interface SOAPFormProps {
     appointmentId: string
     patientId: string
     patientName: string
+}
+
+// Helper component for Voice Input
+const VoiceTextarea = ({
+    id,
+    label,
+    placeholder,
+    colorClass,
+    description
+}: {
+    id: string,
+    label: string,
+    placeholder: string,
+    colorClass: string,
+    description: string
+}) => {
+    const [isListening, setIsListening] = useState(false)
+    const [text, setText] = useState('')
+    const [isSupported, setIsSupported] = useState(false)
+    const recognitionRef = useRef<any>(null)
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const win = window as unknown as IWindow
+            if (win.webkitSpeechRecognition || win.SpeechRecognition) {
+                setIsSupported(true)
+                const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition
+                recognitionRef.current = new SpeechRecognition()
+                recognitionRef.current.continuous = true
+                recognitionRef.current.interimResults = true
+                recognitionRef.current.lang = 'es-ES'
+
+                recognitionRef.current.onresult = (event: any) => {
+                    let finalTranscript = ''
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript
+                        }
+                    }
+                    if (finalTranscript) {
+                        setText(prev => {
+                            const newText = prev ? `${prev} ${finalTranscript}` : finalTranscript
+                            return newText
+                        })
+                    }
+                }
+
+                recognitionRef.current.onend = () => {
+                    setIsListening(false)
+                }
+
+                recognitionRef.current.onerror = (event: any) => {
+                    console.error('Speech recognition error', event.error)
+                    setIsListening(false)
+                }
+            }
+        }
+    }, [])
+
+    const toggleListening = () => {
+        if (!isSupported) return
+
+        if (isListening) {
+            recognitionRef.current.stop()
+            setIsListening(false)
+        } else {
+            recognitionRef.current.start()
+            setIsListening(true)
+        }
+    }
+
+    return (
+        <div className="space-y-2">
+            <div className="flex justify-between items-center">
+                <Label htmlFor={id} className={colorClass}>{label}</Label>
+                {isSupported && (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={toggleListening}
+                        className={`h-7 px-2 gap-1 text-xs transition-all ${isListening
+                            ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:text-red-700 animate-pulse'
+                            : ''
+                            }`}
+                    >
+                        {isListening ? <MicOff size={12} /> : <Mic size={12} />}
+                        {isListening ? 'Detener dictado' : 'Dictar'}
+                    </Button>
+                )}
+            </div>
+            <p className="text-xs text-gray-500 mb-2">{description}</p>
+            <textarea
+                name={id}
+                id={id}
+                required
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                className={`w-full min-h-[120px] rounded-xl border-2 border-gray-100 p-3 text-sm focus:border-blue-500 focus:outline-none transition-colors ${isListening ? 'border-red-200 bg-red-50' : ''}`}
+                placeholder={isListening ? 'Escuchando... (habla claro)' : placeholder}
+            />
+        </div>
+    )
 }
 
 export function SOAPForm({ appointmentId, patientId, patientName }: SOAPFormProps) {
@@ -29,7 +138,7 @@ export function SOAPForm({ appointmentId, patientId, patientName }: SOAPFormProp
 
         const sessionData = {
             appointment_id: appointmentId,
-            patient_id: patientId, // Added patient_id
+            patient_id: patientId,
             subjective: formData.get('subjective') as string,
             objective: formData.get('objective') as string,
             assessment: formData.get('assessment') as string,
@@ -91,50 +200,34 @@ export function SOAPForm({ appointmentId, patientId, patientName }: SOAPFormProp
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <Label htmlFor="subjective" className="text-blue-800">Subjetivo (S)</Label>
-                    <p className="text-xs text-gray-500 mb-2">Lo que el paciente expresa sobre su condición.</p>
-                    <textarea
-                        name="subjective"
-                        id="subjective"
-                        required
-                        className="w-full min-h-[120px] rounded-xl border-2 border-gray-100 p-3 text-sm focus:border-blue-500 focus:outline-none"
-                        placeholder="El paciente refiere dolor en..."
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="objective" className="text-blue-800">Objetivo (O)</Label>
-                    <p className="text-xs text-gray-500 mb-2">Hallazgos físicos, rangos de movimiento, tests.</p>
-                    <textarea
-                        name="objective"
-                        id="objective"
-                        required
-                        className="w-full min-h-[120px] rounded-xl border-2 border-gray-100 p-3 text-sm focus:border-blue-500 focus:outline-none"
-                        placeholder="Flexión limitada a 90 grados..."
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="assessment" className="text-blue-800">Análisis (A)</Label>
-                    <p className="text-xs text-gray-500 mb-2">Diagnóstico funcional y progreso.</p>
-                    <textarea
-                        name="assessment"
-                        id="assessment"
-                        required
-                        className="w-full min-h-[120px] rounded-xl border-2 border-gray-100 p-3 text-sm focus:border-blue-500 focus:outline-none"
-                        placeholder="Mejoría notable en..."
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="plan" className="text-blue-800">Plan (P)</Label>
-                    <p className="text-xs text-gray-500 mb-2">Tratamiento realizado y tareas futuras.</p>
-                    <textarea
-                        name="plan"
-                        id="plan"
-                        required
-                        className="w-full min-h-[120px] rounded-xl border-2 border-gray-100 p-3 text-sm focus:border-blue-500 focus:outline-none"
-                        placeholder="Ejercicios de fortalecimiento..."
-                    />
-                </div>
+                <VoiceTextarea
+                    id="subjective"
+                    label="Subjetivo (S)"
+                    placeholder="El paciente refiere dolor en..."
+                    colorClass="text-blue-800"
+                    description="Lo que el paciente expresa sobre su condición."
+                />
+                <VoiceTextarea
+                    id="objective"
+                    label="Objetivo (O)"
+                    placeholder="Flexión limitada a 90 grados..."
+                    colorClass="text-blue-800"
+                    description="Hallazgos físicos, rangos de movimiento, tests."
+                />
+                <VoiceTextarea
+                    id="assessment"
+                    label="Análisis (A)"
+                    placeholder="Mejoría notable en..."
+                    colorClass="text-blue-800"
+                    description="Diagnóstico funcional y progreso."
+                />
+                <VoiceTextarea
+                    id="plan"
+                    label="Plan (P)"
+                    placeholder="Ejercicios de fortalecimiento..."
+                    colorClass="text-blue-800"
+                    description="Tratamiento realizado y tareas futuras."
+                />
             </div>
 
             <div className="border-y py-6 bg-slate-50/50 -mx-8 px-8">
@@ -183,3 +276,4 @@ export function SOAPForm({ appointmentId, patientId, patientName }: SOAPFormProp
         </form>
     )
 }
+

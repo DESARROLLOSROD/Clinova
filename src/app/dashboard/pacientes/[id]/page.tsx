@@ -7,6 +7,9 @@ import { PatientActions } from '@/components/patients/PatientActions';
 import { MedicalHistorySection } from '@/components/patients/MedicalHistorySection';
 import { PatientPrescriptionsView } from '@/components/patients/PatientPrescriptionsView';
 import { PatientConsentsSection } from '@/components/patients/PatientConsentsSection';
+import { PatientEvolutionChart } from '@/components/patients/PatientEvolutionChart'
+import { PacksManager } from '@/components/patients/PacksManager';
+import { PaymentHistory } from '@/components/patients/PaymentHistory';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +74,7 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
     .order('start_time', { ascending: false })
     .limit(10);
 
+  // Fetch more sessions for the chart to have a better history view
   const { data: sessions } = await supabase
     .from('sessions')
     .select(`
@@ -82,7 +86,7 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
     `)
     .eq('appointments.patient_id', id)
     .order('created_at', { ascending: false })
-    .limit(10);
+    .limit(20);
 
   const totalPaid = (payments || [])
     .filter((p: Payment) => p.status === 'completed')
@@ -121,6 +125,14 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
     cancelled: 'bg-red-100 text-red-800',
     no_show: 'bg-orange-100 text-orange-800',
   };
+
+  // Prepare data for Chart
+  const evolutionData = (sessions || [])
+    .filter(s => s.pain_level !== null)
+    .map(s => ({
+      date: s.appointments?.start_time || s.created_at,
+      pain_level: s.pain_level || 0
+    }));
 
   return (
     <div className="space-y-6">
@@ -249,54 +261,16 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <DollarSign className="text-green-600" size={20} />
-              Historial de Pagos
-            </h2>
-            <Link href="/dashboard/pagos">
-              <Button variant="ghost" size="sm">
-                Ver todos
-              </Button>
-            </Link>
-          </div>
-          {payments && payments.length > 0 ? (
-            <div className="space-y-3">
-              {payments.map((payment: Payment) => (
-                <div key={payment.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold text-gray-900">${payment.amount.toFixed(2)}</p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {methodLabels[payment.method]} -{' '}
-                        {new Date(payment.payment_date).toLocaleDateString('es-ES')}
-                      </p>
-                      {payment.invoice_number && (
-                        <p className="text-xs text-gray-500 mt-1">Factura: {payment.invoice_number}</p>
-                      )}
-                    </div>
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${paymentStatusColors[payment.status]
-                        }`}
-                    >
-                      {statusLabels[payment.status]}
-                    </span>
-                  </div>
-                  {payment.sessions && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
-                      <FileText size={14} />
-                      <span>Asociado a sesión</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center py-8">No hay pagos registrados</p>
-          )}
-        </div>
+        <PaymentHistory
+          payments={payments || []}
+          patientName={`${patient.first_name} ${patient.last_name}`}
+        />
       </div>
+
+      {/* Gráfico de Evolución */}
+      {evolutionData.length > 0 && (
+        <PatientEvolutionChart data={evolutionData} />
+      )}
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
