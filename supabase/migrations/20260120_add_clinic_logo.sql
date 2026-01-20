@@ -1,0 +1,82 @@
+-- ============================================================================
+-- Clinic Logo Support
+-- ============================================================================
+-- This migration adds logo support for clinics
+-- Logos are stored in Supabase Storage, URL reference stored in clinics table
+-- ============================================================================
+
+-- Add logo_url column to clinics table if it doesn't exist
+ALTER TABLE public.clinics
+ADD COLUMN IF NOT EXISTS logo_url TEXT;
+
+-- Comment
+COMMENT ON COLUMN public.clinics.logo_url IS 'URL of the clinic logo stored in Supabase Storage';
+
+-- ============================================================================
+-- Supabase Storage Bucket Configuration for Clinic Logos
+-- ============================================================================
+-- Note: This needs to be configured in Supabase Dashboard → Storage
+-- OR via SQL if you have storage schema access
+--
+-- Bucket name: clinic-logos
+-- Public: true (logos need to be publicly accessible for display)
+-- File size limit: 5MB
+-- Allowed MIME types: image/jpeg, image/png, image/jpg, image/webp, image/svg+xml
+-- ============================================================================
+
+-- If storage schema is available, create the bucket:
+-- INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+-- VALUES (
+--   'clinic-logos',
+--   'clinic-logos',
+--   true,
+--   5242880, -- 5MB
+--   ARRAY['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/svg+xml']
+-- )
+-- ON CONFLICT (id) DO NOTHING;
+
+-- Storage policies for clinic-logos bucket (run in Supabase Dashboard SQL Editor):
+--
+-- Policy: Allow authenticated users to upload their clinic's logo
+-- CREATE POLICY "Users can upload their clinic logo"
+-- ON storage.objects FOR INSERT
+-- WITH CHECK (
+--   bucket_id = 'clinic-logos'
+--   AND auth.role() = 'authenticated'
+--   AND (storage.foldername(name))[1] IN (
+--     SELECT id::text FROM public.clinics WHERE id IN (
+--       SELECT clinic_id FROM public.user_profiles WHERE id = auth.uid()
+--     )
+--   )
+-- );
+--
+-- Policy: Allow public read access to logos
+-- CREATE POLICY "Public read access for clinic logos"
+-- ON storage.objects FOR SELECT
+-- USING (bucket_id = 'clinic-logos');
+--
+-- Policy: Allow users to update their clinic's logo
+-- CREATE POLICY "Users can update their clinic logo"
+-- ON storage.objects FOR UPDATE
+-- USING (
+--   bucket_id = 'clinic-logos'
+--   AND auth.role() = 'authenticated'
+--   AND (storage.foldername(name))[1] IN (
+--     SELECT id::text FROM public.clinics WHERE id IN (
+--       SELECT clinic_id FROM public.user_profiles WHERE id = auth.uid()
+--     )
+--   )
+-- );
+--
+-- Policy: Allow users to delete their clinic's logo
+-- CREATE POLICY "Users can delete their clinic logo"
+-- ON storage.objects FOR DELETE
+-- USING (
+--   bucket_id = 'clinic-logos'
+--   AND auth.role() = 'authenticated'
+--   AND (storage.foldername(name))[1] IN (
+--     SELECT id::text FROM public.clinics WHERE id IN (
+--       SELECT clinic_id FROM public.user_profiles WHERE id = auth.uid()
+--     )
+--   )
+-- );

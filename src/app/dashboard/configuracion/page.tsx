@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { LogoUpload } from '@/components/settings/LogoUpload'
 
 export default function ClinicConfigurationPage() {
   const [loading, setLoading] = useState(true)
@@ -108,6 +109,16 @@ export default function ClinicConfigurationPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Logo de la Clínica */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Logo de la Clínica</h2>
+          <LogoUpload
+            clinicId={clinicData.id}
+            currentLogoUrl={clinicData.logo_url}
+            onLogoUpdated={(newUrl) => setClinicData({ ...clinicData, logo_url: newUrl })}
+          />
+        </Card>
+
         {/* Identidad de Marca */}
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -121,16 +132,6 @@ export default function ClinicConfigurationPage() {
                 value={clinicData.name || ''}
                 onChange={e => setClinicData({ ...clinicData, name: e.target.value })}
                 required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="logo_url">URL del Logo</Label>
-              <Input
-                id="logo_url"
-                value={clinicData.logo_url || ''}
-                onChange={e => setClinicData({ ...clinicData, logo_url: e.target.value })}
-                placeholder="https://..."
               />
             </div>
 
