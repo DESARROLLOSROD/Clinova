@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header'
 import { redirect } from 'next/navigation'
 import { UserProvider } from '@/contexts/UserContext'
 import { UserProfile } from '@/contexts/UserContext'
+import { InactivityMonitor } from '@/components/auth/InactivityMonitor'
 
 export default async function DashboardLayout({
     children,
@@ -26,6 +27,7 @@ export default async function DashboardLayout({
 
     return (
         <UserProvider initialProfile={profile as UserProfile}>
+            <InactivityMonitor />
             <div className="flex h-screen bg-gray-50 dark:bg-gray-950 transition-colors overflow-hidden">
                 <Sidebar />
                 <div className="flex-1 flex flex-col overflow-hidden">
