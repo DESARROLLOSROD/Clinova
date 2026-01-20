@@ -6,31 +6,39 @@ import { Bell } from 'lucide-react';
 import { Notification } from '@/types/notification';
 import { format } from 'date-fns';
 
-export function NotificationBell({ therapistEmail }: { therapistEmail?: string }) {
+export function NotificationBell({ userEmail }: { userEmail?: string }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!therapistEmail) return;
+    if (!userEmail) return;
 
     async function fetchNotifications() {
       const supabase = createClient();
 
-      // Get therapist ID from email
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      setUserId(user.id);
+
+      // First try to get therapist by auth_user_id
       const { data: therapist } = await supabase
         .from('therapists')
         .select('id')
-        .eq('email', therapistEmail)
+        .eq('auth_user_id', user.id)
         .single();
 
-      if (!therapist) return;
+      // Use therapist ID if found, otherwise use user ID
+      const recipientId = therapist?.id || user.id;
 
-      // Fetch unread notifications
+      // Fetch unread notifications for this recipient
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_id', therapist.id)
+        .eq('recipient_id', recipientId)
         .is('read_at', null)
         .order('sent_at', { ascending: false })
         .limit(10);
@@ -53,7 +61,7 @@ export function NotificationBell({ therapistEmail }: { therapistEmail?: string }
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: `recipient_email=eq.${therapistEmail}`,
+          filter: `recipient_email=eq.${userEmail}`,
         },
         (payload) => {
           setNotifications((prev) => [payload.new as Notification, ...prev]);
@@ -65,7 +73,7 @@ export function NotificationBell({ therapistEmail }: { therapistEmail?: string }
     return () => {
       channel.unsubscribe();
     };
-  }, [therapistEmail]);
+  }, [userEmail]);
 
   async function markAsRead(notificationId: string) {
     const supabase = createClient();
@@ -79,7 +87,7 @@ export function NotificationBell({ therapistEmail }: { therapistEmail?: string }
     setUnreadCount((prev) => Math.max(0, prev - 1));
   }
 
-  if (!therapistEmail) return null;
+  if (!userEmail) return null;
 
   return (
     <div className="relative">

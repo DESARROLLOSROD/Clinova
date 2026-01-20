@@ -66,7 +66,7 @@ export function Header({ userEmail }: { userEmail?: string }) {
 
             <div className="flex items-center gap-4">
                 <ModeToggle />
-                <NotificationBell therapistEmail={userEmail} />
+                <NotificationBell userEmail={userEmail} />
                 <div className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-gray-800">
                     <div className="flex flex-col items-end">
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{displayName}</span>
