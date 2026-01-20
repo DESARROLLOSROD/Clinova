@@ -7,9 +7,9 @@ import { PatientEditForm } from '@/components/patients/PatientEditForm'
 
 export const dynamic = 'force-dynamic'
 
-export default async function EditPatientPage({ params }: { params: { id: string } }) {
+export default async function EditPatientPage({ params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient()
-    const { id } = params
+    const { id } = await params
 
     const { data: patient, error } = await supabase
         .from('patients')

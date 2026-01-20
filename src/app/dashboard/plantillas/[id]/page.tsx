@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-dynamic';
 
-export default async function TemplateDetailPage({ params }: { params: { id: string } }) {
+export default async function TemplateDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
-  const { id } = params;
+  const { id } = await params;
 
   const { data: template, error } = await supabase
     .from('treatment_templates')

@@ -46,9 +46,9 @@ interface Session {
   };
 }
 
-export default async function PatientDetailPage({ params }: { params: { id: string } }) {
+export default async function PatientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
-  const { id } = params;
+  const { id } = await params;
 
   const { data: patient, error } = await supabase
     .from('patients')

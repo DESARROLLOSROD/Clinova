@@ -9,7 +9,8 @@ import { SessionEditForm } from '@/components/sessions/SessionEditForm';
 
 export const dynamic = 'force-dynamic';
 
-export default async function SessionDetailPage({ params }: { params: { id: string } }) {
+export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = await createClient();
 
   // Fetch session details
@@ -23,7 +24,7 @@ export default async function SessionDetailPage({ params }: { params: { id: stri
       appointment:appointments(id, appointment_date, appointment_time)
     `
     )
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (error || !session) {

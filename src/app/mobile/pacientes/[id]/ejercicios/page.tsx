@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 export const dynamic = 'force-dynamic';
 
 interface Props {
-    params: {
+    params: Promise<{
         id: string; // Patient ID
-    };
+    }>;
 }
 
 export default async function PatientExercisesMobilePage({ params }: Props) {
     const supabase = await createClient();
-    const { id } = params;
+    const { id } = await params;
 
     // 1. Obtener Info del Paciente
     const { data: patient, error: patientError } = await supabase

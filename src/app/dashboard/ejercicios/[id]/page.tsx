@@ -18,9 +18,9 @@ const difficultyColors: Record<string, string> = {
   advanced: 'bg-red-100 text-red-800',
 };
 
-export default async function ExerciseDetailPage({ params }: { params: { id: string } }) {
+export default async function ExerciseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
-  const { id } = params;
+  const { id } = await params;
 
   const { data: exercise, error } = await supabase
     .from('exercise_library')
