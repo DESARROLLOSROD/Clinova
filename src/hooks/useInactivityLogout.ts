@@ -13,8 +13,8 @@ interface UseInactivityLogoutOptions {
 export function useInactivityLogout(options: UseInactivityLogoutOptions = {}) {
     const { timeoutMinutes = 10, warningMinutes = 1 } = options
     const router = useRouter()
-    const timeoutRef = useRef<NodeJS.Timeout>()
-    const warningTimeoutRef = useRef<NodeJS.Timeout>()
+    const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+    const warningTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
     const warningShownRef = useRef(false)
 
     const TIMEOUT_MS = timeoutMinutes * 60 * 1000
