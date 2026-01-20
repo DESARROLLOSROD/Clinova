@@ -17,7 +17,8 @@
       "Bash(git mv:*)",
       "Bash(git reset:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx supabase status:*)"
+      "Bash(npx supabase status:*)",
+      "Bash(cd:*)"
     ]
   }
 }
