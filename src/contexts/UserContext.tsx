@@ -53,7 +53,8 @@ interface UserProviderProps {
 export function UserProvider({ children, initialProfile = null }: UserProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile)
-  const [loading, setLoading] = useState(!initialProfile)
+  // Start with loading=true, will be set to false after client-side initialization
+  const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchProfile = async (userId: string) => {
@@ -80,30 +81,28 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
   }
 
   useEffect(() => {
-    const getUserProfile = async () => {
+    const initializeUser = async () => {
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
         if (authError) throw authError;
 
-        if (user) {
-          setUser(user);
+        if (authUser) {
+          setUser(authUser);
+          // Only fetch profile if we don't have initialProfile
           if (!initialProfile) {
-            const profileData = await fetchProfile(user.id);
+            const profileData = await fetchProfile(authUser.id);
             setProfile(profileData);
           }
         }
       } catch (error) {
-        console.error('Error in getUserProfile:', error);
+        console.error('Error in initializeUser:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (!initialProfile) {
-      getUserProfile();
-    } else {
-      setLoading(false);
-    }
+    // Always initialize user on client side
+    initializeUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
@@ -125,7 +124,7 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [initialProfile]);
+  }, []);
 
 
   const isSuperAdmin = profile?.role === 'super_admin'
