@@ -24,15 +24,9 @@ export function NotificationBell({ userEmail }: { userEmail?: string }) {
 
       setUserId(user.id);
 
-      // First try to get therapist by auth_user_id
-      const { data: therapist } = await supabase
-        .from('therapists')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
-
-      // Use therapist ID if found, otherwise use user ID
-      const recipientId = therapist?.id || user.id;
+      // Use user ID directly as recipient_id
+      // The notifications system should use user_profiles.id, not therapists.id
+      const recipientId = user.id;
 
       // Fetch unread notifications for this recipient
       const { data, error } = await supabase
@@ -122,9 +116,8 @@ export function NotificationBell({ userEmail }: { userEmail?: string }) {
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-4 hover:bg-gray-50 cursor-pointer ${
-                      !notification.read_at ? 'bg-blue-50' : ''
-                    }`}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer ${!notification.read_at ? 'bg-blue-50' : ''
+                      }`}
                     onClick={() => markAsRead(notification.id)}
                   >
                     <div className="flex justify-between items-start">

@@ -88,8 +88,8 @@ export function PatientEvolutionChart({ data }: PatientEvolutionChartProps) {
                 </div>
             </div>
 
-            <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="h-[300px] w-full" style={{ minHeight: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%" minHeight={300}>
                     <LineChart data={sortedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-gray-800" />
                         <XAxis
