@@ -121,15 +121,23 @@ async function updateClinicSubscription(clinicId: string, subscription: Stripe.S
   const status = SUBSCRIPTION_STATUS_MAP[subscription.status] || 'pending'
   const plan = subscription.metadata?.plan || 'basic'
 
-  // Calculate next payment date
-  const currentPeriodEnd = new Date(subscription.current_period_end * 1000)
+  // Calculate next payment date from subscription items
+  // In newer Stripe API, period info is in items.data[0].current_period_end
+  const subscriptionItem = subscription.items?.data?.[0]
+  const periodEnd = subscriptionItem?.current_period_end
+  const nextPaymentDate = periodEnd ? new Date(periodEnd * 1000) : null
 
-  await supabaseAdmin.from('clinics').update({
+  const updateData: Record<string, unknown> = {
     subscription_status: status,
     subscription_tier: plan,
     stripe_subscription_id: subscription.id,
-    next_payment_date: currentPeriodEnd.toISOString().split('T')[0],
-  }).eq('id', clinicId)
+  }
+
+  if (nextPaymentDate) {
+    updateData.next_payment_date = nextPaymentDate.toISOString().split('T')[0]
+  }
+
+  await supabaseAdmin.from('clinics').update(updateData).eq('id', clinicId)
 
   console.log(`Subscription updated for clinic ${clinicId}: ${status}`)
 }
@@ -155,35 +163,49 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
-  if (!invoice.subscription) return
+  // Get subscription ID from parent or subscription field
+  const subscriptionId = (invoice as unknown as { subscription?: string | null }).subscription
+    || (invoice as unknown as { parent?: { subscription_details?: { subscription?: string } } }).parent?.subscription_details?.subscription
+
+  if (!subscriptionId) return
 
   const { data: clinic } = await supabaseAdmin
     .from('clinics')
     .select('id')
-    .eq('stripe_subscription_id', invoice.subscription as string)
+    .eq('stripe_subscription_id', subscriptionId)
     .single()
 
   if (!clinic) return
 
   // Update next payment date
-  const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
-  const nextPaymentDate = new Date(subscription.current_period_end * 1000)
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+  const subscriptionItem = subscription.items?.data?.[0]
+  const periodEnd = subscriptionItem?.current_period_end
 
-  await supabaseAdmin.from('clinics').update({
+  const updateData: Record<string, unknown> = {
     subscription_status: 'active',
-    next_payment_date: nextPaymentDate.toISOString().split('T')[0],
-  }).eq('id', clinic.id)
+  }
+
+  if (periodEnd) {
+    updateData.next_payment_date = new Date(periodEnd * 1000).toISOString().split('T')[0]
+  }
+
+  await supabaseAdmin.from('clinics').update(updateData).eq('id', clinic.id)
 
   console.log(`Invoice paid for clinic ${clinic.id}`)
 }
 
 async function handleInvoiceFailed(invoice: Stripe.Invoice) {
-  if (!invoice.subscription) return
+  // Get subscription ID from parent or subscription field
+  const subscriptionId = (invoice as unknown as { subscription?: string | null }).subscription
+    || (invoice as unknown as { parent?: { subscription_details?: { subscription?: string } } }).parent?.subscription_details?.subscription
+
+  if (!subscriptionId) return
 
   const { data: clinic } = await supabaseAdmin
     .from('clinics')
     .select('id')
-    .eq('stripe_subscription_id', invoice.subscription as string)
+    .eq('stripe_subscription_id', subscriptionId)
     .single()
 
   if (!clinic) return

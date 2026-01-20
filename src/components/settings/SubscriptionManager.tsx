@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { CreditCard, ExternalLink, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
-import { getStripe } from '@/lib/stripe-client'
 
 interface SubscriptionManagerProps {
   clinic: {
@@ -67,11 +66,8 @@ export function SubscriptionManager({ clinic }: SubscriptionManagerProps) {
         throw new Error(data.error || 'Error al crear sesión de pago')
       }
 
-      // Redirect to Stripe Checkout
-      const stripe = await getStripe()
-      if (stripe && data.sessionId) {
-        await stripe.redirectToCheckout({ sessionId: data.sessionId })
-      } else if (data.url) {
+      // Redirect to Stripe Checkout URL
+      if (data.url) {
         window.location.href = data.url
       }
     } catch (error) {
@@ -211,7 +207,7 @@ export function SubscriptionManager({ clinic }: SubscriptionManagerProps) {
                   </ul>
                   <Button
                     className="w-full mt-4"
-                    variant={isCurrent ? 'secondary' : 'default'}
+                    variant={isCurrent ? 'secondary' : 'primary'}
                     disabled={isCurrent || loading === key}
                     onClick={() => handleUpgrade(key)}
                   >

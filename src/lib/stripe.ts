@@ -1,10 +1,29 @@
 import Stripe from 'stripe'
 
-// Server-side Stripe instance
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-01-27.acacia',
-  typescript: true,
-})
+// Lazy initialization of Stripe client
+let stripeClient: Stripe | null = null
+
+export function getStripeClient(): Stripe {
+  if (!stripeClient) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not configured')
+    }
+    stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-12-15.clover',
+      typescript: true,
+    })
+  }
+  return stripeClient
+}
+
+// For backwards compatibility
+export const stripe = {
+  get customers() { return getStripeClient().customers },
+  get checkout() { return getStripeClient().checkout },
+  get billingPortal() { return getStripeClient().billingPortal },
+  get subscriptions() { return getStripeClient().subscriptions },
+  get webhooks() { return getStripeClient().webhooks },
+}
 
 // Price IDs for subscription plans (configure these in Stripe Dashboard)
 export const STRIPE_PRICE_IDS = {

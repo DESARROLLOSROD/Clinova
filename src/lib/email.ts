@@ -1,10 +1,20 @@
 import { Resend } from 'resend'
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 // Default sender email (configure in Resend dashboard)
 const FROM_EMAIL = process.env.EMAIL_FROM || 'Clinova <noreply@clinova.com>'
+
+// Lazy initialization of Resend client
+let resendClient: Resend | null = null
+
+function getResendClient(): Resend | null {
+  if (!process.env.RESEND_API_KEY) {
+    return null
+  }
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resendClient
+}
 
 export interface SendEmailParams {
   to: string | string[]
@@ -15,6 +25,13 @@ export interface SendEmailParams {
 }
 
 export async function sendEmail({ to, subject, html, text, replyTo }: SendEmailParams) {
+  const resend = getResendClient()
+
+  if (!resend) {
+    console.warn('Resend API key not configured. Email not sent:', { to, subject })
+    return { success: false, id: null, message: 'Email service not configured' }
+  }
+
   try {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
