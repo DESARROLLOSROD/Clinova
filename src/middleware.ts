@@ -58,10 +58,10 @@ export async function middleware(request: NextRequest) {
             }
         }
 
-        // Patient routing (redirect to their exercises page)
+        // Patient routing (redirect to portal)
         if (profile?.role === 'patient' && request.nextUrl.pathname.startsWith('/dashboard')) {
-            if (!request.nextUrl.pathname.startsWith('/dashboard/mis-ejercicios')) {
-                return redirect('/dashboard/mis-ejercicios')
+            if (!request.nextUrl.pathname.startsWith('/dashboard/portal')) {
+                return redirect('/dashboard/portal')
             }
         }
 

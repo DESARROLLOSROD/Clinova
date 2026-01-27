@@ -19,8 +19,8 @@ import {
 import { cn } from '@/components/ui/button'
 import { useUser, Permission } from '@/contexts/UserContext'
 import React, { useEffect, useState } from 'react'
-import { differenceInDays, parseISO } from 'date-fns'
 import { createClient } from '@/utils/supabase/client'
+import { getDaysDifference, getSubscriptionStatusColor } from '@/lib/utils'
 
 interface NavigationItem {
     name: string
@@ -89,6 +89,12 @@ const navigation: NavigationItem[] = [
         name: 'Configuración',
         href: '/dashboard/configuracion',
         icon: Settings,
+        permission: 'clinic:configure'
+    },
+    {
+        name: 'Servicios',
+        href: '/dashboard/servicios',
+        icon: Activity, // Retrying Activity or finding a better icon like List/Briefcase
         permission: 'clinic:configure'
     },
 ]
@@ -206,34 +212,27 @@ export function Sidebar() {
             <div className="border-t border-gray-100 dark:border-gray-800 p-4">
                 <div className="border-t border-gray-100 dark:border-gray-800 p-4">
                     {clinicSubscription ? (
-                        <div className={`rounded-xl p-4 ${(() => {
-                                if (!clinicSubscription.next_payment_date) return 'bg-blue-50 dark:bg-blue-900/10'
-                                const days = differenceInDays(parseISO(clinicSubscription.next_payment_date), new Date())
-                                if (days < 3) return 'bg-red-50 dark:bg-red-900/10 border-red-100'
-                                if (days < 15) return 'bg-orange-50 dark:bg-orange-900/10 border-orange-100'
-                                return 'bg-blue-50 dark:bg-blue-900/10'
-                            })()
+                        <div className={`rounded-xl p-4 border ${(() => {
+                            const days = getDaysDifference(clinicSubscription.next_payment_date)
+                            if (days === null) return 'bg-blue-50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/20'
+                            if (days < 3) return 'bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-900/20'
+                            if (days < 15) return 'bg-orange-50 border-orange-100 dark:bg-orange-900/10 dark:border-orange-900/20'
+                            return 'bg-blue-50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/20'
+                        })()
                             }`}>
                             <h4 className="text-sm font-semibold capitalize text-gray-900 dark:text-gray-100">Plan {clinicSubscription.subscription_tier}</h4>
-                            <p className={`mt-1 text-xs font-medium ${(() => {
-                                    if (!clinicSubscription.next_payment_date) return 'text-gray-500'
-                                    const days = differenceInDays(parseISO(clinicSubscription.next_payment_date), new Date())
-                                    if (days < 3) return 'text-red-600'
-                                    if (days < 15) return 'text-orange-600'
-                                    return 'text-blue-600 dark:text-blue-400'
-                                })()
-                                }`}>
+                            <p className={`mt-1 text-xs font-medium ${getSubscriptionStatusColor(getDaysDifference(clinicSubscription.next_payment_date))}`}>
                                 {(() => {
-                                    if (!clinicSubscription.next_payment_date) return 'Suscripción activa'
-                                    const days = differenceInDays(parseISO(clinicSubscription.next_payment_date), new Date())
+                                    const days = getDaysDifference(clinicSubscription.next_payment_date)
+                                    if (days === null) return 'Suscripción activa'
                                     if (days < 0) return `Venció hace ${Math.abs(days)} días`
                                     if (days === 0) return 'Vence hoy'
                                     return `Tu licencia expira en ${days} días`
                                 })()}
                             </p>
                             {(() => {
-                                const days = clinicSubscription.next_payment_date ? differenceInDays(parseISO(clinicSubscription.next_payment_date), new Date()) : 30
-                                if (days < 15) {
+                                const days = getDaysDifference(clinicSubscription.next_payment_date)
+                                if (days !== null && days < 15) {
                                     return (
                                         <button className="mt-3 text-xs font-bold text-red-600 hover:text-red-700 hover:underline">
                                             Renovar ahora

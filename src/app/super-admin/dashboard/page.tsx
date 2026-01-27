@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/client'
 import { Card } from '@/components/ui/card'
 import { Building2, Users, DollarSign, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
+import { getDaysDifference, getSubscriptionBadgeColor } from '@/lib/utils'
 
 interface PlatformStats {
     totalClinics: number
@@ -19,6 +20,7 @@ interface Clinic {
     name: string
     subscription_status: string
     subscription_tier: string
+    next_payment_date: string | null
     created_at: string
     _count: {
         users: number
@@ -187,42 +189,49 @@ export default function SuperAdminDashboard() {
                                 <th className="text-left py-3 px-4 font-medium text-gray-700">Clínica</th>
                                 <th className="text-left py-3 px-4 font-medium text-gray-700">Estado</th>
                                 <th className="text-left py-3 px-4 font-medium text-gray-700">Plan</th>
+                                <th className="text-left py-3 px-4 font-medium text-gray-700">Renovación</th>
                                 <th className="text-left py-3 px-4 font-medium text-gray-700">Usuarios</th>
                                 <th className="text-left py-3 px-4 font-medium text-gray-700">Pacientes</th>
-                                <th className="text-left py-3 px-4 font-medium text-gray-700">Creada</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {recentClinics.map((clinic) => (
-                                <tr key={clinic.id} className="border-b hover:bg-gray-50">
-                                    <td className="py-3 px-4">
-                                        <Link
-                                            href={`/super-admin/clinics/${clinic.id}`}
-                                            className="font-medium text-blue-600 hover:text-blue-700"
-                                        >
-                                            {clinic.name}
-                                        </Link>
-                                    </td>
-                                    <td className="py-3 px-4">
-                                        <span
-                                            className={`px-2 py-1 rounded-full text-xs font-medium ${clinic.subscription_status === 'active'
+                            {recentClinics.map((clinic) => {
+                                const daysRemaining = getDaysDifference(clinic.next_payment_date)
+                                return (
+                                    <tr key={clinic.id} className="border-b hover:bg-gray-50">
+                                        <td className="py-3 px-4">
+                                            <Link
+                                                href={`/super-admin/clinics/${clinic.id}`}
+                                                className="font-medium text-blue-600 hover:text-blue-700"
+                                            >
+                                                {clinic.name}
+                                            </Link>
+                                        </td>
+                                        <td className="py-3 px-4">
+                                            <span
+                                                className={`px-2 py-1 rounded-full text-xs font-medium ${clinic.subscription_status === 'active'
                                                     ? 'bg-green-100 text-green-800'
                                                     : clinic.subscription_status === 'trial'
                                                         ? 'bg-orange-100 text-orange-800'
                                                         : 'bg-gray-100 text-gray-800'
-                                                }`}
-                                        >
-                                            {clinic.subscription_status}
-                                        </span>
-                                    </td>
-                                    <td className="py-3 px-4 capitalize">{clinic.subscription_tier}</td>
-                                    <td className="py-3 px-4">{clinic._count.users}</td>
-                                    <td className="py-3 px-4">{clinic._count.patients}</td>
-                                    <td className="py-3 px-4 text-gray-600">
-                                        {new Date(clinic.created_at).toLocaleDateString('es-MX')}
-                                    </td>
-                                </tr>
-                            ))}
+                                                    }`}
+                                            >
+                                                {clinic.subscription_status}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-4 capitalize">{clinic.subscription_tier}</td>
+                                        <td className="py-3 px-4">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSubscriptionBadgeColor(daysRemaining)}`}>
+                                                {daysRemaining !== null ? (
+                                                    daysRemaining < 0 ? `Venció (${Math.abs(daysRemaining)}d)` : `${daysRemaining} días`
+                                                ) : 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-4">{clinic._count.users}</td>
+                                        <td className="py-3 px-4">{clinic._count.patients}</td>
+                                    </tr>
+                                )
+                            })}
                         </tbody>
                     </table>
                 </div>

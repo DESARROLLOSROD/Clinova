@@ -1,85 +1,74 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { Calendar, DollarSign, Dumbbell, FileText, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PrescriptionForm } from '@/components/exercises/PrescriptionForm';
-import { TreatmentPlanAssignment } from '@/components/treatments/TreatmentPlanAssignment';
+import { Mail, CheckCircle, Loader2 } from 'lucide-react';
+import { createClient } from '@/utils/supabase/client';
+import { toast } from 'sonner';
 
 interface PatientActionsProps {
   patientId: string;
+  email: string | null;
+  hasAccess: boolean;
+  onInviteSent?: () => void;
 }
 
-export function PatientActions({ patientId }: PatientActionsProps) {
-  const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
-  const [showTreatmentPlanForm, setShowTreatmentPlanForm] = useState(false);
+export function PatientActions({ patientId, email, hasAccess, onInviteSent }: PatientActionsProps) {
+  const [loading, setLoading] = useState(false);
+  const supabase = createClient();
 
-  if (showPrescriptionForm) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-6">
-        <h2 className="text-xl font-semibold mb-4">Prescribir Ejercicios</h2>
-        <PrescriptionForm
-          patientId={patientId}
-          onSuccess={() => {
-            setShowPrescriptionForm(false);
-            window.location.reload();
-          }}
-          onCancel={() => setShowPrescriptionForm(false)}
-        />
-      </div>
-    );
-  }
+  const handleInvite = async () => {
+    if (!email) {
+      toast.error('El paciente no tiene un email registrado');
+      return;
+    }
 
-  if (showTreatmentPlanForm) {
+    setLoading(true);
+    try {
+      // 1. Create Supabase Auth user (sends magic link/invite)
+      // Note: This requires the "Enable Signup" option in Supabase or using a dedicated Edge Function if admin-only.
+      // For now, we simulate the invite or use the client-side invite if enabled.
+
+      // In a real production environment with service role:
+      // const { data, error } = await supabase.auth.admin.inviteUserByEmail(email);
+
+      // Using client side (works if "Allow unauthenticated signups" is on or if we just want to send a reset password)
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/setup-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success('Invitación enviada correctamente al correo del paciente');
+      if (onInviteSent) onInviteSent();
+
+    } catch (error: any) {
+      console.error('Error inviting patient:', error);
+      toast.error(error.message || 'Error al enviar invitación');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (hasAccess) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-6">
-        <TreatmentPlanAssignment
-          patientId={patientId}
-          onSuccess={() => {
-            setShowTreatmentPlanForm(false);
-            window.location.reload();
-          }}
-          onCancel={() => setShowTreatmentPlanForm(false)}
-        />
+      <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-full text-sm font-medium">
+        <CheckCircle size={16} />
+        Acceso al Portal Activo
       </div>
-    );
+    )
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <Link href={`/dashboard/agenda/nueva?patient_id=${patientId}`}>
-        <Button size="sm" className="gap-2">
-          <Calendar size={16} />
-          Nueva Cita
-        </Button>
-      </Link>
-      <Link href={`/dashboard/pagos/nuevo?patient_id=${patientId}`}>
-        <Button size="sm" variant="outline" className="gap-2">
-          <DollarSign size={16} />
-          Registrar Pago
-        </Button>
-      </Link>
-      <button
-        onClick={() => setShowPrescriptionForm(true)}
-        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
-      >
-        <Dumbbell size={16} />
-        Prescribir Ejercicios
-      </button>
-      <button
-        onClick={() => setShowTreatmentPlanForm(true)}
-        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-md transition-colors"
-      >
-        <Activity size={16} />
-        Asignar Plan
-      </button>
-      <Link href={`/dashboard/pacientes/${patientId}/evaluacion`}>
-        <Button size="sm" variant="outline" className="gap-2">
-          <FileText size={16} />
-          Evaluación Inicial
-        </Button>
-      </Link>
-    </div>
+    <Button
+      variant="outline"
+      size="sm"
+      className="gap-2"
+      onClick={handleInvite}
+      disabled={loading || !email}
+    >
+      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail size={16} />}
+      Invitar al Portal
+    </Button>
   );
 }

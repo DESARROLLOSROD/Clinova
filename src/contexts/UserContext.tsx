@@ -40,6 +40,9 @@ interface UserContextType {
   isPatient: boolean
   can: (permission: Permission) => boolean
   refreshProfile: () => Promise<void>
+  viewAsClinic: (clinicId: string) => void
+  stopImpersonating: () => void
+  isImpersonating: boolean
 }
 
 
@@ -53,6 +56,7 @@ interface UserProviderProps {
 export function UserProvider({ children, initialProfile = null }: UserProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile)
+  const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(null) // For impersonation
   // Start with loading=true, will be set to false after client-side initialization
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
@@ -76,7 +80,36 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
     if (!user) return
     const freshProfile = await fetchProfile(user.id)
     if (freshProfile) {
-      setProfile(freshProfile)
+      if (originalProfile) {
+        setOriginalProfile(freshProfile)
+        // If impersonating, we might want to keep the impersonated clinic_id, or reset?
+        // For simplicity, let's keep impersonation active but update other fields if needed.
+        // Actually, safer to stop impersonating on refresh to avoid sync issues, or just update original.
+      } else {
+        setProfile(freshProfile)
+      }
+    }
+  }
+
+  const viewAsClinic = (clinicId: string) => {
+    if (!profile || profile.role !== 'super_admin') return
+
+    if (!originalProfile) {
+      setOriginalProfile(profile)
+    }
+
+    // Create a modified profile with the target clinic_id
+    // We keep the role as super_admin so permissions pass, but components using clinic_id will see the new one.
+    setProfile({
+      ...profile,
+      clinic_id: clinicId
+    })
+  }
+
+  const stopImpersonating = () => {
+    if (originalProfile) {
+      setProfile(originalProfile)
+      setOriginalProfile(null)
     }
   }
 
@@ -158,6 +191,9 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
     isPatient,
     can,
     refreshProfile,
+    viewAsClinic,
+    stopImpersonating,
+    isImpersonating: !!originalProfile,
   }
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>

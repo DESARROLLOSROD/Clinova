@@ -218,7 +218,11 @@ export default async function PatientDetailPage({ params }: { params: Promise<{ 
               </div>
             )}
           </div>
-          <PatientActions patientId={patient.id} />
+          <PatientActions
+            patientId={patient.id}
+            email={patient.email}
+            hasAccess={!!patient.auth_user_id}
+          />
         </div>
       </div>
 
