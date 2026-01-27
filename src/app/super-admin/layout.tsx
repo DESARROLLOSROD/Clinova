@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { Building2, BarChart3, Settings, LogOut, CreditCard } from 'lucide-react'
+import { SuperAdminMobileSidebar } from './SuperAdminMobileSidebar'
 
 export default async function SuperAdminLayout({
     children,
@@ -37,23 +38,32 @@ export default async function SuperAdminLayout({
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Top Navigation */}
-            <nav className="bg-white border-b border-gray-200">
+            <nav className="bg-white border-b border-gray-200 sticky top-0 z-30">
                 <div className="px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center">
-                            <h1 className="text-xl font-bold text-gray-900">
+                            <SuperAdminMobileSidebar onSignOut={async () => {
+                                'use server'
+                                const supabase = await createClient()
+                                await supabase.auth.signOut()
+                                redirect('/login')
+                            }} />
+                            <h1 className="text-xl font-bold text-gray-900 hidden md:block">
                                 Clinova <span className="text-blue-600">Super Admin</span>
+                            </h1>
+                            <h1 className="text-lg font-bold text-gray-900 md:hidden">
+                                Super Admin
                             </h1>
                         </div>
                         <div className="flex items-center gap-4">
-                            <span className="text-sm text-gray-600">{profile.full_name}</span>
+                            <span className="text-sm text-gray-600 hidden md:inline">{profile.full_name}</span>
                             <form action={handleSignOut}>
                                 <button
                                     type="submit"
                                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
                                 >
                                     <LogOut className="h-4 w-4" />
-                                    Salir
+                                    <span className="hidden md:inline">Salir</span>
                                 </button>
                             </form>
                         </div>
@@ -62,8 +72,8 @@ export default async function SuperAdminLayout({
             </nav>
 
             <div className="flex">
-                {/* Sidebar */}
-                <aside className="w-64 bg-white border-r border-gray-200 min-h-[calc(100vh-4rem)]">
+                {/* Sidebar - Desktop Only */}
+                <aside className="hidden md:block w-64 bg-white border-r border-gray-200 min-h-[calc(100vh-4rem)]">
                     <nav className="p-4 space-y-2">
                         <Link
                             href="/super-admin/dashboard"
@@ -104,7 +114,7 @@ export default async function SuperAdminLayout({
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1">
+                <main className="flex-1 w-full overflow-x-hidden">
                     {children}
                 </main>
             </div>
