@@ -53,14 +53,14 @@ export function StatsCharts() {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Gráfico de Sesiones */}
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md">
+            <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md min-w-0">
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Sesiones Semanales</h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Rendimiento de citas</p>
                     </div>
                 </div>
-                <div className="h-[300px] w-full">
+                <div className="w-full" style={{ height: 300 }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={sessionData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-gray-800" />
@@ -90,14 +90,14 @@ export function StatsCharts() {
             </div>
 
             {/* Gráfico de Ingresos */}
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md">
+            <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md min-w-0">
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Ingresos Semanales</h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Tendencia financiera</p>
                     </div>
                 </div>
-                <div className="h-[300px] w-full">
+                <div className="w-full" style={{ height: 300 }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={revenueData}>
                             <defs>
