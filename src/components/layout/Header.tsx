@@ -8,6 +8,7 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { ModeToggle } from '@/components/shared/ModeToggle'
+import { MobileSidebar } from './MobileSidebar'
 
 export function Header({ userEmail }: { userEmail?: string }) {
     const { profile, user } = useUser()
@@ -62,7 +63,11 @@ export function Header({ userEmail }: { userEmail?: string }) {
 
     return (
         <header className="h-16 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-8 flex items-center justify-between transition-colors">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Panel Principal</h2>
+            <div className="flex items-center gap-4">
+                <MobileSidebar />
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 hidden md:block">Panel Principal</h2>
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 md:hidden">Clinova</h2>
+            </div>
 
             <div className="flex items-center gap-4">
                 <ModeToggle />
