@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "144124437122",
+    "project_id": "steam-house-431222-d4",
+    "storage_bucket": "steam-house-431222-d4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:144124437122:android:1cd7838c210f4532bc8a9b",
+        "android_client_info": {
+          "package_name": "com.clinova.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5IaRfUWxS6BPpo3LT0M1bUihSeSiG9V8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
