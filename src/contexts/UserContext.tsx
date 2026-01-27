@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
+import { initPushNotifications } from '@/lib/mobile-notifications'
 
 export type UserRole = 'super_admin' | 'clinic_manager' | 'therapist' | 'receptionist' | 'patient'
 
@@ -119,8 +120,14 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
         if (authError) throw authError;
 
+
+
+        // ... (in useEffect)
         if (authUser) {
           setUser(authUser);
+          // Initialize Push Notifications if valid user
+          initPushNotifications(authUser.id);
+
           // Only fetch profile if we don't have initialProfile
           if (!initialProfile) {
             const profileData = await fetchProfile(authUser.id);
