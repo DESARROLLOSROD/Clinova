@@ -6,6 +6,7 @@ import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { logLoginAction } from '@/app/auth/actions'
 
 export function LoginForm() {
     const router = useRouter()
@@ -29,6 +30,9 @@ export function LoginForm() {
             if (error) {
                 throw error
             }
+
+            // Log successful login via Server Action
+            await logLoginAction()
 
             router.refresh()
             router.push('/dashboard')

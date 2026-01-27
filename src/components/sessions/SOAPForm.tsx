@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
-import { ArrowLeft, Activity, Mic, MicOff, Loader2 } from 'lucide-react'
+import { ArrowLeft, Activity, Mic, MicOff, Loader2, Sparkles } from 'lucide-react'
+import { generateSessionSummaryAction } from '@/app/dashboard/sesiones/actions'
 import { BodyMap, type BodyMark } from '@/components/shared/BodyMap'
 
 // Type definition for SpeechRecognition
@@ -26,14 +27,17 @@ const VoiceTextarea = ({
     label,
     placeholder,
     colorClass,
-    description
+    description,
+    onAiEnhance
 }: {
     id: string,
     label: string,
     placeholder: string,
     colorClass: string,
-    description: string
+    description: string,
+    onAiEnhance?: (text: string) => Promise<string | null>
 }) => {
+    const [isAiLoading, setIsAiLoading] = useState(false)
     const [isListening, setIsListening] = useState(false)
     const [text, setText] = useState('')
     const [isSupported, setIsSupported] = useState(false)
@@ -93,21 +97,42 @@ const VoiceTextarea = ({
         <div className="space-y-2">
             <div className="flex justify-between items-center">
                 <Label htmlFor={id} className={colorClass}>{label}</Label>
-                {isSupported && (
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={toggleListening}
-                        className={`h-7 px-2 gap-1 text-xs transition-all ${isListening
-                            ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:text-red-700 animate-pulse'
-                            : ''
-                            }`}
-                    >
-                        {isListening ? <MicOff size={12} /> : <Mic size={12} />}
-                        {isListening ? 'Detener dictado' : 'Dictar'}
-                    </Button>
-                )}
+                <div className="flex gap-2">
+                    {onAiEnhance && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={async () => {
+                                if (!text) return
+                                setIsAiLoading(true)
+                                const newText = await onAiEnhance(text)
+                                if (newText) setText(newText)
+                                setIsAiLoading(false)
+                            }}
+                            disabled={isAiLoading || !text}
+                            className="h-7 px-2 gap-1 text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                        >
+                            {isAiLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                            {isAiLoading ? 'Mejorando...' : 'Mejorar IA'}
+                        </Button>
+                    )}
+                    {isSupported && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={toggleListening}
+                            className={`h-7 px-2 gap-1 text-xs transition-all ${isListening
+                                ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:text-red-700 animate-pulse'
+                                : ''
+                                }`}
+                        >
+                            {isListening ? <MicOff size={12} /> : <Mic size={12} />}
+                            {isListening ? 'Detener dictado' : 'Dictar'}
+                        </Button>
+                    )}
+                </div>
             </div>
             <p className="text-xs text-gray-500 mb-2">{description}</p>
             <textarea
@@ -206,6 +231,10 @@ export function SOAPForm({ appointmentId, patientId, patientName }: SOAPFormProp
                     placeholder="El paciente refiere dolor en..."
                     colorClass="text-blue-800"
                     description="Lo que el paciente expresa sobre su condición."
+                    onAiEnhance={async (text) => {
+                        const { success, data } = await generateSessionSummaryAction(text)
+                        return success && data ? data : null
+                    }}
                 />
                 <VoiceTextarea
                     id="objective"
@@ -220,6 +249,10 @@ export function SOAPForm({ appointmentId, patientId, patientName }: SOAPFormProp
                     placeholder="Mejoría notable en..."
                     colorClass="text-blue-800"
                     description="Diagnóstico funcional y progreso."
+                    onAiEnhance={async (text) => {
+                        const { success, data } = await generateSessionSummaryAction(text)
+                        return success && data ? data : null
+                    }}
                 />
                 <VoiceTextarea
                     id="plan"

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { Users, Calendar, DollarSign, FileText, TrendingUp, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { StatsCharts } from '@/components/dashboard/StatsCharts'
+import { StaggerContainer, StaggerItem, FadeIn } from '@/components/ui/motion-containers'
 
 export const dynamic = 'force-dynamic'
 
@@ -78,8 +79,8 @@ export default async function DashboardPage() {
         <div className="transition-colors">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Resumen General</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
+            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <StaggerItem className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Pacientes Activos</h3>
@@ -89,9 +90,9 @@ export default async function DashboardPage() {
                             <Users className="text-blue-600 dark:text-blue-400" size={24} />
                         </div>
                     </div>
-                </div>
+                </StaggerItem>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
+                <StaggerItem className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Citas Hoy</h3>
@@ -101,9 +102,9 @@ export default async function DashboardPage() {
                             <Calendar className="text-purple-600 dark:text-purple-400" size={24} />
                         </div>
                     </div>
-                </div>
+                </StaggerItem>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
+                <StaggerItem className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Ingresos (Mes)</h3>
@@ -113,9 +114,9 @@ export default async function DashboardPage() {
                             <DollarSign className="text-green-600 dark:text-green-400" size={24} />
                         </div>
                     </div>
-                </div>
+                </StaggerItem>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
+                <StaggerItem className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Pagos Pendientes</h3>
@@ -125,9 +126,9 @@ export default async function DashboardPage() {
                             <AlertCircle className="text-yellow-600 dark:text-yellow-400" size={24} />
                         </div>
                     </div>
-                </div>
+                </StaggerItem>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
+                <StaggerItem className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Sesiones (Mes)</h3>
@@ -137,9 +138,9 @@ export default async function DashboardPage() {
                             <FileText className="text-indigo-600 dark:text-indigo-400" size={24} />
                         </div>
                     </div>
-                </div>
+                </StaggerItem>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
+                <StaggerItem className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Sesiones</h3>
@@ -149,12 +150,14 @@ export default async function DashboardPage() {
                             <TrendingUp className="text-teal-600 dark:text-teal-400" size={24} />
                         </div>
                     </div>
-                </div>
-            </div>
+                </StaggerItem>
+            </StaggerContainer>
 
-            <StatsCharts />
+            <FadeIn delay={0.4}>
+                <StatsCharts />
+            </FadeIn>
 
-            <div className="mt-8">
+            <FadeIn delay={0.6} className="mt-8">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Citas Recientes</h3>
                     <Link href="/dashboard/agenda" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium transition-colors">
@@ -204,7 +207,7 @@ export default async function DashboardPage() {
                         </div>
                     )}
                 </div>
-            </div>
+            </FadeIn>
         </div>
     )
 }

@@ -157,14 +157,20 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
     });
 
     return (
-        <div className="flex h-full flex-col bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 transition-colors">
-            <div className="flex h-16 items-center px-6 border-b border-gray-100 dark:border-gray-800">
-                <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2 font-semibold text-xl text-gray-900 dark:text-gray-100">
-                    <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <Stethoscope className="h-5 w-5 text-white" />
+        <div className="flex h-full flex-col bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-r border-gray-200 dark:border-gray-800 transition-colors">
+            {/* Logo y Encabezado */}
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/20">
+                        <Activity className="text-white h-6 w-6" />
                     </div>
-                    <span>Clinova</span>
-                </Link>
+                    <div>
+                        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                            Clinova
+                        </h1>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Panel de Control</p>
+                    </div>
+                </div>
             </div>
             <div className="flex-1 overflow-y-auto py-4">
                 <nav className="space-y-1 px-3">
