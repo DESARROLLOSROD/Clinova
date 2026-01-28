@@ -26,6 +26,10 @@ export function MobileSidebar() {
                             </button>
                         </Dialog.Close>
                     </div>
+                    <Dialog.Title className="sr-only">Menú de Navegación</Dialog.Title>
+                    <Dialog.Description className="sr-only">
+                        Barra lateral de navegación principal
+                    </Dialog.Description>
                     <div className="h-full overflow-y-auto">
                         <SidebarContent onNavigate={() => setOpen(false)} />
                     </div>

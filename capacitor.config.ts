@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
     // cleartext: true,
 
     // PRODUCCIÓN: Descomenta y pon tu URL de Railway/Vercel
-    url: 'https://clinova-production-561d.up.railway.app/',
+    url: 'https://clinova-production.up.railway.app',
   }
 };
 
