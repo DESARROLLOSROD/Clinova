@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { UserRole } from '@/types/roles';
 import { createClient } from '@/utils/supabase/client';
+import { useUser } from '@/contexts/UserContext';
 
 interface CreateUserFormProps {
   onSuccess?: (userId: string, role: UserRole) => void;
@@ -48,15 +49,32 @@ export default function CreateUserForm({
   const [medicalHistory, setMedicalHistory] = useState('');
   const [primaryTherapistId, setPrimaryTherapistId] = useState('');
 
-  // Therapist list for patient assignment
-  const [therapists, setTherapists] = useState<Array<{ id: string; first_name: string; last_name: string }>>([]);
+  const { profile } = useUser(); // Get current user profile
+  const [clinics, setClinics] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedClinicId, setSelectedClinicId] = useState<string>('');
 
   // Load therapists when patient role is selected
   useState(() => {
     if (role === UserRole.PATIENT) {
       loadTherapists();
     }
+    // Load clinics if super admin
+    if (profile?.role === UserRole.SUPER_ADMIN) {
+      loadClinics();
+    }
   });
+
+  const loadClinics = async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('clinics')
+      .select('id, name')
+      .order('name');
+
+    if (data) {
+      setClinics(data);
+    }
+  };
 
   const loadTherapists = async () => {
     const supabase = createClient();
@@ -64,6 +82,8 @@ export default function CreateUserForm({
       .from('therapists')
       .select('id, first_name, last_name')
       .eq('status', 'active')
+      // If clinic selected, filter by it (optional enhancement)
+      .psi_filter_placeholder_ // Placeholder to keep logic simple for now
       .order('first_name');
 
     if (data) {
@@ -79,11 +99,14 @@ export default function CreateUserForm({
 
     try {
       // Prepare additional data based on role
-      let additionalData: any = {};
+      let additionalData: any = {
+        clinic_id: selectedClinicId || undefined // Include selected clinic if available
+      };
 
       switch (role) {
         case UserRole.THERAPIST:
           additionalData = {
+            ...additionalData,
             phone: phone || null,
             specialization: specialization || null,
             license_number: licenseNumber || null,
@@ -97,6 +120,7 @@ export default function CreateUserForm({
 
         case UserRole.PATIENT:
           additionalData = {
+            ...additionalData,
             phone: phone || null,
             date_of_birth: dateOfBirth || null,
             address: address || null,
@@ -110,15 +134,20 @@ export default function CreateUserForm({
         case UserRole.CLINIC_MANAGER:
         case UserRole.RECEPTIONIST:
           additionalData = {
+            ...additionalData,
             phone: phone || null,
           };
           break;
       }
 
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
       const response = await fetch('/api/users/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || ''}`,
         },
         body: JSON.stringify({
           email,
@@ -210,6 +239,28 @@ export default function CreateUserForm({
               {Object.values(UserRole).map((r) => (
                 <option key={r} value={r}>
                   {getRoleLabel(r)}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Clinic Selection (Super Admin only) */}
+        {profile?.role === UserRole.SUPER_ADMIN && clinics.length > 0 && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Asignar a Clínica *
+            </label>
+            <select
+              value={selectedClinicId}
+              onChange={(e) => setSelectedClinicId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="">Seleccionar clínica...</option>
+              {clinics.map((clinic) => (
+                <option key={clinic.id} value={clinic.id}>
+                  {clinic.name}
                 </option>
               ))}
             </select>
