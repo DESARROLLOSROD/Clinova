@@ -157,7 +157,7 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
     });
 
     return (
-        <div className="flex h-full flex-col bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-r border-gray-200 dark:border-gray-800 transition-colors">
+        <div className="flex h-full flex-col bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 transition-colors">
             {/* Logo y Encabezado */}
             <div className="p-6 border-b border-gray-100 dark:border-gray-800">
                 <div className="flex items-center gap-3">

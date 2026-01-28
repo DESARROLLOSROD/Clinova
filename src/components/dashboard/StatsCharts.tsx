@@ -61,7 +61,7 @@ export function StatsCharts() {
                     </div>
                 </div>
                 <div className="w-full" style={{ height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="99%" height="100%">
                         <BarChart data={sessionData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-gray-800" />
                             <XAxis
@@ -98,7 +98,7 @@ export function StatsCharts() {
                     </div>
                 </div>
                 <div className="w-full" style={{ height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="99%" height="100%">
                         <AreaChart data={revenueData}>
                             <defs>
                                 <linearGradient id="colorIngresos" x1="0" y1="0" x2="0" y2="1">
