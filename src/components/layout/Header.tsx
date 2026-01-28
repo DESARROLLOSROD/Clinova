@@ -56,8 +56,8 @@ export function Header({ userEmail }: { userEmail?: string }) {
     }
 
     return (
-        <header className="h-16 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-8 flex items-center justify-between transition-colors">
-            <div className="flex items-center gap-4">
+        <header className="sticky top-0 z-30 min-h-16 h-auto border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-8 flex items-center justify-between transition-colors pt-[env(safe-area-inset-top)]">
+            <div className="flex items-center gap-4 py-3">
                 <MobileSidebar />
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 hidden md:block">Panel Principal</h2>
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 md:hidden">Clinova</h2>
