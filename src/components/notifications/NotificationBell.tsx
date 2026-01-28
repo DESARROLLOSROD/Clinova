@@ -24,14 +24,12 @@ export function NotificationBell({ userEmail }: { userEmail?: string }) {
 
       setUserId(user.id);
 
-      // Use user ID directly as user_id
-      const recipientId = user.id;
-
-      // Fetch unread notifications for this recipient
+      // Fetch unread notifications for this user
+      // Query uses user_id as per new schema
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', recipientId)
+        .eq('user_id', user.id)
         .is('read_at', null)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -54,7 +52,7 @@ export function NotificationBell({ userEmail }: { userEmail?: string }) {
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: `recipient_email=eq.${userEmail}`,
+          filter: userId ? `user_id=eq.${userId}` : undefined,
         },
         (payload) => {
           setNotifications((prev) => [payload.new as Notification, ...prev]);

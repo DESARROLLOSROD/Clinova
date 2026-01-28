@@ -31,12 +31,12 @@ export function LoginForm() {
                 throw error
             }
 
-            // Log successful login via Server Action
-            try {
-                await logLoginAction()
-            } catch (err) {
-                console.error('Failed to log login:', err)
-            }
+            // Log successful login via Server Action (Disabled temporarily due to stability issues)
+            // try {
+            //     await logLoginAction()
+            // } catch (err) {
+            //     console.error('Failed to log login:', err)
+            // }
 
             router.refresh()
             router.push('/dashboard')
