@@ -251,21 +251,49 @@ export async function POST(request: Request) {
 
     // Send invitation email if requested
     if (sendInvite && newUser.user.email) {
-      const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-        newUser.user.email,
-        {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/setup-password`,
-        }
-      );
+      try {
+        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'invite',
+          email: newUser.user.email,
+          options: {
+            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/setup-password`,
+          }
+        });
 
-      if (inviteError) {
+        if (linkError) throw linkError;
+
+        // Try to send with Resend if available
+        if (process.env.RESEND_API_KEY) {
+          const { sendEmail, emailTemplates } = await import('@/lib/email');
+
+          await sendEmail({
+            to: newUser.user.email,
+            ...emailTemplates.invitationEmail(
+              first_name,
+              additionalData.clinic_name || 'Clinova',
+              linkData.properties.action_link
+            )
+          });
+        } else {
+          // Fallback to Supabase built-in if no Resend Key (which might be why it failed before)
+          // But since we already generated a link, we can't easily fallback to inviteUserByEmail without duplicate logic.
+          // We will log a warning that Resend is missing.
+          console.warn('RESEND_API_KEY missing. Invite email was NOT sent via Resend. Use Supabase SMTP or add Key.');
+
+          // Retry with standard Supabase invite as backup if Resend is not configured
+          await supabaseAdmin.auth.admin.inviteUserByEmail(newUser.user.email, {
+            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/setup-password`,
+          });
+        }
+
+      } catch (inviteError: any) {
         console.error('Error sending invite:', inviteError);
         return NextResponse.json({
           success: true,
           userId: newUser.user.id,
           roleSpecificRecord,
           inviteSent: false,
-          message: 'Usuario creado pero no se pudo enviar el email de invitación'
+          message: 'Usuario creado pero hubo un error al enviar la invitación: ' + inviteError.message
         });
       }
     }

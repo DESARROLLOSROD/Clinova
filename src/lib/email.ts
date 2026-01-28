@@ -219,4 +219,38 @@ export const emailTemplates = {
     `,
     text: `Hola ${patientName}, hemos recibido tu pago de ${amount} por ${concept} el ${date}. Gracias.`,
   }),
+
+  invitationEmail: (userName: string, clinicName: string, inviteUrl: string) => ({
+    subject: `Invitación a ${clinicName} - Clinova`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Te han invitado a Clinova</h1>
+          </div>
+          <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+            <p>Hola <strong>${userName}</strong>,</p>
+            <p>Se ha creado una cuenta para ti en <strong>${clinicName}</strong>.</p>
+            <p>Para completar tu registro y establecer tu contraseña, haz clic en el siguiente botón:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${inviteUrl}" style="background: #667eea; color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                Activar mi Cuenta
+              </a>
+            </div>
+            <p style="font-size: 12px; color: #888;">Este enlace expirará en 24 horas.</p>
+            <p style="margin-top: 30px; color: #666; font-size: 14px;">
+              Saludos,<br>
+              El equipo de ${clinicName}
+            </p>
+          </div>
+        </body>
+      </html>
+    `,
+    text: `Hola ${userName}, has sido invitado a unirte a ${clinicName}. Activa tu cuenta aquí: ${inviteUrl}`,
+  })
 }
