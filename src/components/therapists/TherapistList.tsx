@@ -154,21 +154,24 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
                 )}
 
                 {/* Patient Count */}
-                <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <Users size={16} className="text-gray-400 dark:text-gray-500" />
-                    <span>
-                      {therapist.therapist_patient_assignments?.[0]?.count || 0} paciente
-                      {(therapist.therapist_patient_assignments?.[0]?.count || 0) !== 1 ? 's' : ''} asignado
-                      {(therapist.therapist_patient_assignments?.[0]?.count || 0) !== 1 ? 's' : ''}
-                    </span>
+                {/* Actions */}
+                <div className="mt-4 flex items-center justify-between text-sm pt-4 border-t border-gray-100 dark:border-gray-800">
+                  {/* Status/Auth Indicator */}
+                  <div>
+                    {therapist.auth_user_id ? (
+                      <span className="flex items-center text-green-600 dark:text-green-500 text-xs gap-1">
+                        <Users size={12} />
+                        Acceso Habilitado
+                      </span>
+                    ) : (
+                      <InviteButton therapistId={therapist.id} />
+                    )}
                   </div>
-                </div>
 
-                {/* View Details Button */}
-                <div className="mt-4 flex items-center justify-end text-sm text-blue-600 dark:text-blue-400">
-                  <Eye size={16} className="mr-1" />
-                  Ver Detalles
+                  <div className="flex items-center text-blue-600 dark:text-blue-400">
+                    <Eye size={16} className="mr-1" />
+                    Ver Detalles
+                  </div>
                 </div>
               </div>
             </Link>
@@ -176,5 +179,55 @@ export function TherapistList({ initialTherapists }: TherapistListProps) {
         )}
       </div>
     </div>
+  );
+}
+
+function InviteButton({ therapistId }: { therapistId: string }) {
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleInvite = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent link navigation
+    e.stopPropagation();
+
+    if (!confirm('¿Estás seguro de querer dar acceso y enviar invitación a este fisioterapeuta?')) return;
+
+    setLoading(true);
+    try {
+      const { inviteTherapist } = await import('@/app/actions/therapistActions');
+      const result = await inviteTherapist(therapistId);
+
+      if (result.success) {
+        alert('Invitación enviada correctamente');
+        setSent(true);
+      } else {
+        alert('Error al enviar invitación: ' + result.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error inesperado');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (sent) {
+    return (
+      <span className="flex items-center text-green-600 text-xs gap-1">
+        <Mail size={12} />
+        Enviado
+      </span>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleInvite}
+      disabled={loading}
+      className="flex items-center gap-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-1 rounded transition-colors disabled:opacity-50"
+    >
+      <Mail size={12} />
+      {loading ? 'Enviando...' : 'Dar Acceso'}
+    </button>
   );
 }
