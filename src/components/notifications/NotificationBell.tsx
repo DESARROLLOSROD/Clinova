@@ -24,17 +24,16 @@ export function NotificationBell({ userEmail }: { userEmail?: string }) {
 
       setUserId(user.id);
 
-      // Use user ID directly as recipient_id
-      // The notifications system should use user_profiles.id, not therapists.id
+      // Use user ID directly as user_id
       const recipientId = user.id;
 
       // Fetch unread notifications for this recipient
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_id', recipientId)
+        .eq('user_id', recipientId)
         .is('read_at', null)
-        .order('sent_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(10);
 
       if (!error && data) {
