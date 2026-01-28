@@ -14,7 +14,6 @@ export async function initPushNotifications(userId: string) {
     const isNative = Capacitor.isNativePlatform();
 
     if (!isNative) {
-        console.log('Push Notifications are only supported on native devices.');
         return;
     }
 
