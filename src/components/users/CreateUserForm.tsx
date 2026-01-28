@@ -34,9 +34,15 @@ export default function CreateUserForm({
   const [licenseNumber, setLicenseNumber] = useState('');
   const [status, setStatus] = useState<'active' | 'inactive' | 'on_leave'>('active');
 
+  // Address fields (shared for Patient and Therapist)
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+
   // Patient-specific fields
   const [dateOfBirth, setDateOfBirth] = useState('');
-  const [address, setAddress] = useState('');
+  // address is now shared
   const [emergencyContactName, setEmergencyContactName] = useState('');
   const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
   const [medicalHistory, setMedicalHistory] = useState('');
@@ -81,6 +87,10 @@ export default function CreateUserForm({
             phone: phone || null,
             specialization: specialization || null,
             license_number: licenseNumber || null,
+            address: address || null,
+            city: city || null,
+            state: state || null,
+            postal_code: postalCode || null,
             status,
           };
           break;
@@ -307,6 +317,59 @@ export default function CreateUserForm({
                 <option value="inactive">Inactivo</option>
                 <option value="on_leave">De Baja</option>
               </select>
+            </div>
+
+            <div className="border-t pt-4 mt-4">
+              <h4 className="text-sm font-semibold text-gray-800 mb-3">Dirección & Contacto</h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Dirección
+                  </label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Calle, número, colonia"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Ciudad
+                    </label>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Estado
+                    </label>
+                    <input
+                      type="text"
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      C.P.
+                    </label>
+                    <input
+                      type="text"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

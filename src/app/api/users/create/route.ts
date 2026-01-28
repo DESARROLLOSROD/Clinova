@@ -195,6 +195,10 @@ export async function POST(request: Request) {
             specialization: additionalData.specialization || null,
             license_number: additionalData.license_number || null,
             phone: additionalData.phone || null,
+            address: additionalData.address || null,
+            city: additionalData.city || null,
+            state: additionalData.state || null,
+            postal_code: additionalData.postal_code || null,
             certifications: additionalData.certifications || [],
           })
           .select()
