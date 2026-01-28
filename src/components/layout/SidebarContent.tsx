@@ -128,11 +128,11 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
 
     if (loading) {
         return (
-            <div className="flex h-full flex-col bg-white border-r border-gray-200">
+            <div className="flex h-full flex-col bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
                 <div className="px-6 py-8">
                     <div className="flex items-center gap-2 mb-8 animate-pulse">
-                        <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
-                        <div className="h-6 w-24 bg-gray-200 rounded"></div>
+                        <div className="h-8 w-8 bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
+                        <div className="h-6 w-24 bg-gray-200 dark:bg-gray-800 rounded"></div>
                     </div>
                 </div>
             </div>

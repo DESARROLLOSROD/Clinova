@@ -187,6 +187,7 @@ export async function POST(request: Request) {
           .from('therapists')
           .insert({
             auth_user_id: newUser.user.id,
+            clinic_id: additionalData.clinic_id,
             first_name,
             last_name,
             email,
@@ -214,6 +215,7 @@ export async function POST(request: Request) {
           .from('patients')
           .insert({
             auth_user_id: newUser.user.id,
+            clinic_id: additionalData.clinic_id,
             first_name,
             last_name,
             email,
