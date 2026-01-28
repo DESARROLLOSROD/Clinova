@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mail, CheckCircle, Loader2 } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
+import { invitePatient } from '@/app/actions/patientActions';
 import { toast } from 'sonner';
 
 interface PatientActionsProps {
@@ -15,7 +15,7 @@ interface PatientActionsProps {
 
 export function PatientActions({ patientId, email, hasAccess, onInviteSent }: PatientActionsProps) {
   const [loading, setLoading] = useState(false);
-  const supabase = createClient();
+  const [sent, setSent] = useState(false);
 
   const handleInvite = async () => {
     if (!email) {
@@ -25,21 +25,14 @@ export function PatientActions({ patientId, email, hasAccess, onInviteSent }: Pa
 
     setLoading(true);
     try {
-      // 1. Create Supabase Auth user (sends magic link/invite)
-      // Note: This requires the "Enable Signup" option in Supabase or using a dedicated Edge Function if admin-only.
-      // For now, we simulate the invite or use the client-side invite if enabled.
+      const result = await invitePatient(patientId);
 
-      // In a real production environment with service role:
-      // const { data, error } = await supabase.auth.admin.inviteUserByEmail(email);
-
-      // Using client side (works if "Allow unauthenticated signups" is on or if we just want to send a reset password)
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/setup-password`,
-      });
-
-      if (error) throw error;
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
       toast.success('Invitación enviada correctamente al correo del paciente');
+      setSent(true);
       if (onInviteSent) onInviteSent();
 
     } catch (error: any) {
@@ -65,10 +58,10 @@ export function PatientActions({ patientId, email, hasAccess, onInviteSent }: Pa
       size="sm"
       className="gap-2"
       onClick={handleInvite}
-      disabled={loading || !email}
+      disabled={loading || !email || sent}
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail size={16} />}
-      Invitar al Portal
+      {sent ? 'Enviado' : 'Invitar al Portal'}
     </Button>
   );
 }
