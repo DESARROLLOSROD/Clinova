@@ -11,6 +11,7 @@ import {
     AreaChart,
     Area
 } from 'recharts'
+import { useState, useEffect } from 'react'
 
 const sessionData = [
     { name: 'Lun', sesiones: 12 },
@@ -50,6 +51,21 @@ const CustomTooltip = ({ active, payload, label, prefix = '' }: any) => {
 }
 
 export function StatsCharts() {
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) {
+        return (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div className="bg-white dark:bg-gray-900 h-[300px] rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 animate-pulse" />
+                <div className="bg-white dark:bg-gray-900 h-[300px] rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 animate-pulse" />
+            </div>
+        )
+    }
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Gráfico de Sesiones */}
@@ -61,7 +77,7 @@ export function StatsCharts() {
                     </div>
                 </div>
                 <div className="w-full" style={{ height: 300 }}>
-                    <ResponsiveContainer width="99%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={sessionData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-gray-800" />
                             <XAxis
@@ -98,7 +114,7 @@ export function StatsCharts() {
                     </div>
                 </div>
                 <div className="w-full" style={{ height: 300 }}>
-                    <ResponsiveContainer width="99%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={revenueData}>
                             <defs>
                                 <linearGradient id="colorIngresos" x1="0" y1="0" x2="0" y2="1">
