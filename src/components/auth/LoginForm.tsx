@@ -32,7 +32,11 @@ export function LoginForm() {
             }
 
             // Log successful login via Server Action
-            await logLoginAction()
+            try {
+                await logLoginAction()
+            } catch (err) {
+                console.error('Failed to log login:', err)
+            }
 
             router.refresh()
             router.push('/dashboard')

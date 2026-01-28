@@ -16,7 +16,9 @@ export async function logLoginAction() {
                 details: { email: user.email }
             })
         }
+        return { success: true }
     } catch (error) {
         console.error('Error in logLoginAction:', error)
+        return { success: false }
     }
 }
