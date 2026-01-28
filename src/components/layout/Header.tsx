@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { ModeToggle } from '@/components/shared/ModeToggle'
 import { MobileSidebar } from './MobileSidebar'
+import { signOutAction } from '@/app/auth/actions'
 
 export function Header({ userEmail }: { userEmail?: string }) {
     const { profile, user } = useUser()
@@ -38,25 +39,18 @@ export function Header({ userEmail }: { userEmail?: string }) {
     const handleLogout = async () => {
         try {
             setIsLoggingOut(true)
+
+            // Server-side logout to clear cookies reliably
+            await signOutAction()
+
+            // Client-side cleanup (optional but good practice)
             const supabase = createClient()
+            await supabase.auth.signOut()
 
-            // Set a timeout for the signout process just in case
-            const logoutPromise = supabase.auth.signOut()
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Logout timed out')), 3000)
-            )
-
-            try {
-                await Promise.race([logoutPromise, timeoutPromise])
-            } catch (err) {
-                console.warn('Logout timed out or failed, proceeding with local cleanup:', err)
-            }
-
-            // Always redirect and refresh to be sure
+            // Hard redirect to login
             window.location.href = '/login'
         } catch (error) {
             console.error('Error al cerrar sesión:', error)
-            // Fallback redirect
             window.location.href = '/login'
         }
     }

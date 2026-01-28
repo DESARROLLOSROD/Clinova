@@ -22,3 +22,26 @@ export async function logLoginAction() {
         return { success: false }
     }
 }
+
+export async function signOutAction() {
+    try {
+        const supabase = await createClient()
+        // Check user before signing out for logging (optional)
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (user) {
+            await logActivity({
+                action: 'logout',
+                entityType: 'auth',
+                entityId: user.id,
+                details: { email: user.email }
+            })
+        }
+
+        await supabase.auth.signOut()
+        return { success: true }
+    } catch (error) {
+        console.error('Error signing out:', error)
+        return { success: false }
+    }
+}
