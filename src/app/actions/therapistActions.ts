@@ -39,29 +39,34 @@ export async function inviteTherapist(therapistId: string) {
             return { success: false, error: 'Therapist has no email' };
         }
 
-        // 3. Create Auth User
-        const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
-            email: therapist.email,
-            email_confirm: true, // We will send our own invite link, so confirm email to avoid double verification issues or use standard flow
-            user_metadata: {
+        // 3. Create Auth User and Send Invite Email via Supabase
+        const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/setup-password`;
+
+        const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(therapist.email, {
+            data: {
                 first_name: therapist.first_name,
                 last_name: therapist.last_name,
                 role: UserRole.THERAPIST,
                 clinic_id: therapist.clinic_id,
             },
+            redirectTo,
+        });
+
+        if (inviteError) {
+            return { success: false, error: inviteError.message };
+        }
+
+        const userId = inviteData.user.id;
+
+        // 4. Set app_metadata (not settable via inviteUserByEmail)
+        await supabaseAdmin.auth.admin.updateUserById(userId, {
             app_metadata: {
                 role: UserRole.THERAPIST,
                 clinic_id: therapist.clinic_id,
             },
         });
 
-        if (createUserError) {
-            // If user already exists (maybe created manually?), try to link
-            // But for now, return error
-            return { success: false, error: createUserError.message };
-        }
-
-        // 4. Assign Role
+        // 5. Assign Role
         const { data: roleData } = await supabaseAdmin
             .from('roles')
             .select('id')
@@ -70,65 +75,25 @@ export async function inviteTherapist(therapistId: string) {
 
         if (roleData) {
             await supabaseAdmin.from('user_roles').insert({
-                user_id: newUser.user.id,
+                user_id: userId,
                 role_id: roleData.id,
             });
         }
 
-        // 5. Update Therapist Record
+        // 6. Update Therapist Record
         await supabaseAdmin
             .from('therapists')
-            .update({ auth_user_id: newUser.user.id })
+            .update({ auth_user_id: userId })
             .eq('id', therapistId);
 
-        // 6. Update User Profile (to ensure sync)
+        // 7. Update User Profile (to ensure sync)
         await supabaseAdmin.from('user_profiles').upsert({
-            id: newUser.user.id,
+            id: userId,
             role: UserRole.THERAPIST,
             clinic_id: therapist.clinic_id,
             full_name: `${therapist.first_name} ${therapist.last_name}`,
-            professional_title: 'Fisioterapeuta' // Should import getRoleTitle but hardcoding for simplicity/speed
+            professional_title: 'Fisioterapeuta',
         });
-
-        // 7. Send Invite Email
-        // Generate Link
-        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-            type: 'invite',
-            email: therapist.email,
-            options: {
-                redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/setup-password`,
-            }
-        });
-
-        if (linkError) throw linkError;
-
-        // Send via Resend
-        if (process.env.RESEND_API_KEY) {
-            const { sendEmail, emailTemplates } = await import('@/lib/email');
-            // Fetch clinic name if possible, or default
-            const { data: clinic } = await supabaseAdmin.from('clinics').select('name').eq('id', therapist.clinic_id).single();
-
-            await sendEmail({
-                to: therapist.email,
-                ...emailTemplates.invitationEmail(
-                    therapist.first_name,
-                    clinic?.name || 'Clínica',
-                    linkData.properties.action_link
-                )
-            });
-        } else {
-            // Fallback or warning
-            console.log('Sending Supabase invite to:', therapist.email);
-            const { data, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(therapist.email, {
-                redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/setup-password`,
-            });
-
-            if (inviteError) {
-                console.error('Supabase invite error:', inviteError);
-                return { success: false, error: 'Supabase email failed: ' + inviteError.message };
-            }
-            console.log('Supabase invite sent successfully:', data);
-        }
 
         return { success: true };
 
