@@ -18,8 +18,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { X, Plus } from 'lucide-react';
 
+import { useUser } from '@/contexts/UserContext';
+
 export default function NewTherapistPage() {
   const router = useRouter();
+  const { profile } = useUser(); // Get current user profile for clinic_id
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [specialties, setSpecialties] = useState<string[]>([]);
@@ -64,6 +67,7 @@ export default function NewTherapistPage() {
       status: formData.get('status') as string || 'active',
       hire_date: formData.get('hire_date') as string || null,
       notes: formData.get('notes') as string || null,
+      clinic_id: profile?.clinic_id, // Automatically assign the current user's clinic
     };
 
     try {
