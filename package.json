@@ -9,7 +9,8 @@
     "lint": "eslint",
     "mobile:sync": "npx cap sync",
     "mobile:open:android": "npx cap open android",
-    "mobile:open:ios": "npx cap open ios"
+    "mobile:open:ios": "npx cap open ios",
+    "resources": "capacitor-assets generate"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.1",
@@ -53,6 +54,7 @@
     "zod": "^4.3.4"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
