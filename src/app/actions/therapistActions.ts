@@ -118,10 +118,16 @@ export async function inviteTherapist(therapistId: string) {
             });
         } else {
             // Fallback or warning
-            console.warn('RESEND_API_KEY missing, falling back to Supabase standard invite');
-            await supabaseAdmin.auth.admin.inviteUserByEmail(therapist.email, {
+            console.log('Sending Supabase invite to:', therapist.email);
+            const { data, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(therapist.email, {
                 redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/setup-password`,
             });
+
+            if (inviteError) {
+                console.error('Supabase invite error:', inviteError);
+                return { success: false, error: 'Supabase email failed: ' + inviteError.message };
+            }
+            console.log('Supabase invite sent successfully:', data);
         }
 
         return { success: true };
