@@ -53,6 +53,9 @@ export default function CreateUserForm({
   const [clinics, setClinics] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedClinicId, setSelectedClinicId] = useState<string>('');
 
+  // Therapist list for patient assignment
+  const [therapists, setTherapists] = useState<Array<{ id: string; first_name: string; last_name: string }>>([]);
+
   // Load therapists when patient role is selected
   useState(() => {
     if (role === UserRole.PATIENT) {
@@ -82,8 +85,6 @@ export default function CreateUserForm({
       .from('therapists')
       .select('id, first_name, last_name')
       .eq('status', 'active')
-      // If clinic selected, filter by it (optional enhancement)
-      .psi_filter_placeholder_ // Placeholder to keep logic simple for now
       .order('first_name');
 
     if (data) {
