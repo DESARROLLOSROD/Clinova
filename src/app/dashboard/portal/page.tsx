@@ -25,6 +25,7 @@ interface Appointment {
 
 export default function PatientDashboard() {
     const [loading, setLoading] = useState(true);
+    const [loadingStatus, setLoadingStatus] = useState('Iniciando...');
     const [error, setError] = useState<string | null>(null);
     const [patientName, setPatientName] = useState('');
     const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -34,6 +35,7 @@ export default function PatientDashboard() {
     const fetchDashboardData = async () => {
         try {
             setError(null);
+            setLoadingStatus('Verificando autenticación...');
             const { data: { user }, error: authError } = await supabase.auth.getUser();
 
             if (authError) {
@@ -47,6 +49,7 @@ export default function PatientDashboard() {
                 return;
             }
 
+            setLoadingStatus('Buscando perfil de paciente...');
             const { data: patient, error: patientError } = await supabase
                 .from('patients')
                 .select('first_name, id')
@@ -62,6 +65,7 @@ export default function PatientDashboard() {
             if (patient) {
                 setPatientName(patient.first_name);
 
+                setLoadingStatus('Cargando citas y ejercicios...');
                 // Fetch all appointments with therapist and clinic data
                 const { data: appointmentsData } = await supabase
                     .from('appointments')
@@ -97,7 +101,12 @@ export default function PatientDashboard() {
     }, []);
 
     if (loading) {
-        return <div className="p-8 text-center text-gray-500">Cargando...</div>;
+        return (
+            <div className="flex flex-col items-center justify-center p-8 space-y-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="text-gray-500 text-sm">{loadingStatus}</p>
+            </div>
+        );
     }
 
     if (error) {
