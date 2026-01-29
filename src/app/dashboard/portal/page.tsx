@@ -27,6 +27,7 @@ interface Appointment {
 export default function PatientDashboard() {
     const { user, loading: authLoading } = useUser();
     const [loading, setLoading] = useState(true);
+    const [status, setStatus] = useState('Iniciando...');
     const [error, setError] = useState<string | null>(null);
     const [patientName, setPatientName] = useState('');
     const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -36,6 +37,8 @@ export default function PatientDashboard() {
     const fetchDashboardData = async (userId: string) => {
         try {
             setError(null);
+            setStatus('Buscando tu perfil...');
+            console.log("Fetching patient profile for:", userId);
 
             const { data: patient, error: patientError } = await supabase
                 .from('patients')
@@ -44,39 +47,50 @@ export default function PatientDashboard() {
                 .single();
 
             if (patientError) {
-                console.error('Patient query error:', patientError);
-                setError('No se encontró el perfil de paciente asociado a tu cuenta.');
+                console.error("Patient fetch error:", patientError);
+                if (patientError.code === 'PGRST116') {
+                    setError('No tienes un perfil de paciente creado. Por favor contacta a soporte.');
+                } else {
+                    setError(`Error al buscar perfil: ${patientError.message}`);
+                }
                 return;
             }
 
             if (patient) {
                 setPatientName(patient.first_name);
+                setStatus('Cargando citas...');
+                console.log("Fetching appointments for patient:", patient.id);
 
-                const { data: appointmentsData } = await supabase
+                // Using simpler selection to avoid potential RLS or join issues that cause hangs
+                const { data: appointmentsData, error: apptError } = await supabase
                     .from('appointments')
-                    .select(`
-                        *,
-                        therapist:therapists(first_name, last_name),
-                        clinic:clinics(name, address)
-                    `)
+                    .select('*')
                     .eq('patient_id', patient.id)
                     .order('start_time', { ascending: true });
 
+                if (apptError) {
+                    console.error("Appointments fetch error:", apptError);
+                }
                 setAppointments(appointmentsData || []);
 
-                const { count } = await supabase
+                setStatus('Verificando ejercicios...');
+                console.log("Fetching exercises...");
+                const { count, error: exError } = await supabase
                     .from('patient_exercise_prescriptions')
                     .select('*', { count: 'exact', head: true })
                     .eq('patient_id', patient.id)
                     .eq('status', 'active');
 
+                if (exError) console.error("Exercises fetch error:", exError);
                 setPendingExercises(count || 0);
             }
-        } catch (error) {
+            setStatus('Listo');
+        } catch (error: any) {
             console.error('Error fetching dashboard:', error);
-            setError('Error al cargar los datos. Intenta recargar la página.');
+            setError(`Error inesperado: ${error?.message || 'Error desconocido'}`);
         } finally {
             setLoading(false);
+            setStatus('Carga finalizada');
         }
     };
 
@@ -143,7 +157,10 @@ export default function PatientDashboard() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p className="text-gray-500 text-sm">Cargando portal...</p>
+                <div className="text-center">
+                    <p className="text-gray-900 font-medium tracking-wide">Cargando portal...</p>
+                    <p className="text-gray-500 text-xs mt-1">{status}</p>
+                </div>
             </div>
         );
     }
