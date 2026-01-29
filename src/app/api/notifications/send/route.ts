@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
     let pushResult = null;
 
-    // Option 1: Send notification by ID (from database)
+    // Option 1: Send notification by ID (already in database)
     if (notificationId) {
       const { data: notification, error: fetchError } = await supabase
         .from('notifications')
@@ -33,68 +33,48 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Notification not found' }, { status: 404 })
       }
 
-      // Try sending push if user has devices
+      // Send push if user has devices
       if (notification.user_id) {
         pushResult = await sendPushNotification(notification.user_id, {
           title: notification.title || 'Nueva Notificación',
-          body: notification.message || notification.body || 'Tienes un nuevo mensaje'
+          body: notification.message || 'Tienes un nuevo mensaje'
         });
       }
 
-      // Check if Resend is configured
-      if (!process.env.RESEND_API_KEY) {
-        console.log('Email service not configured. Would send:', {
-          to: notification.recipient_email,
-          subject: notification.subject,
-          body: notification.body,
-        })
-        return NextResponse.json({
-          success: true,
-          pushResult,
-          message: 'Notification logged (email service not configured)',
-        })
-      }
-
-      // Send email using Resend
-      const result = await sendEmail({
-        to: notification.recipient_email,
-        subject: notification.subject,
-        html: notification.body.replace(/\n/g, '<br>'),
-        text: notification.body,
-      })
-
-      // Update notification as sent
-      await supabase
-        .from('notifications')
-        .update({ sent_at: new Date().toISOString() })
-        .eq('id', notificationId)
-
       return NextResponse.json({
         success: true,
-        emailId: result.id,
         pushResult,
-        message: 'Email sent successfully',
+        message: 'Notification sent',
       })
     }
 
-    // Option 2: Send direct notification (email + push)
+    // Option 2: Send direct notification (save to DB + push + email)
     if ((email || userId) && subject) {
 
-      // Send Push if userId provided
+      // Save to notifications table so it shows in the bell
       if (userId) {
+        await supabase.from('notifications').insert({
+          user_id: userId,
+          title: subject,
+          message: text || 'Nuevas actualizaciones en Clinova',
+          type: 'info',
+        });
+
+        // Send push notification to device
         pushResult = await sendPushNotification(userId, {
           title: subject,
           body: text || 'Nuevas actualizaciones en Clinova'
         });
       }
 
+      // Send email if configured
       if (email) {
         if (!process.env.RESEND_API_KEY) {
           console.log('Email service not configured. Would send:', { to: email, subject })
           return NextResponse.json({
             success: true,
             pushResult,
-            message: 'Email logged (service not configured)',
+            message: 'Notification saved and push sent (email service not configured)',
           })
         }
 
@@ -109,14 +89,14 @@ export async function POST(request: Request) {
           success: true,
           emailId: result.id,
           pushResult,
-          message: 'Email sent successfully',
+          message: 'Notification sent successfully',
         })
       }
 
       return NextResponse.json({
         success: true,
         pushResult,
-        message: 'Notification processed (Push only)',
+        message: 'Notification processed',
       })
     }
 

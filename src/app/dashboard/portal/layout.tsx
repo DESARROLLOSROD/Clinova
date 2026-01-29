@@ -15,6 +15,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
 import { initPushNotifications } from '@/lib/mobile-notifications';
+import { signOutAction } from '@/app/auth/actions';
 
 export default function PatientPortalLayout({
     children,
@@ -41,10 +42,12 @@ export default function PatientPortalLayout({
         if (isSigningOut) return;
         setIsSigningOut(true);
         try {
-            await Promise.race([
-                supabase.auth.signOut(),
-                new Promise(resolve => setTimeout(resolve, 2000))
-            ]);
+            // Server-side logout to clear cookies reliably
+            await signOutAction();
+
+            // Client-side cleanup
+            await supabase.auth.signOut();
+
             // Force clear any stale data
             localStorage.clear();
         } catch (error) {
