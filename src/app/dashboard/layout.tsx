@@ -26,6 +26,18 @@ export default async function DashboardLayout({
         .eq('id', user.id)
         .single()
 
+    const isPatient = profile?.role === 'patient'
+
+    // Patients use the portal layout which has its own sidebar and navigation
+    if (isPatient) {
+        return (
+            <UserProvider initialProfile={profile as UserProfile}>
+                <InactivityMonitor />
+                {children}
+            </UserProvider>
+        )
+    }
+
     return (
         <UserProvider initialProfile={profile as UserProfile}>
             <InactivityMonitor />
