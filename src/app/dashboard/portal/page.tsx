@@ -101,23 +101,43 @@ export default function PatientDashboard() {
         fetchDashboardData(user.id);
     }, [authLoading, user]);
 
-    if (authLoading || !user || loading) {
+    useEffect(() => {
+        // Safety timeout to prevent infinite loading
+        const timer = setTimeout(() => {
+            if (loading || authLoading) {
+                if (!user && !loading) return; // If redirecting, don't show error
+                setLoading(false);
+                setError('La carga está tardando demasiado. Por favor recarga la página.');
+            }
+        }, 8000);
+        return () => clearTimeout(timer);
+    }, [loading, authLoading, user]);
+
+    if (error) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 space-y-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p className="text-gray-500 text-sm">Cargando portal...</p>
+            <div className="p-8 text-center flex flex-col items-center justify-center min-h-[50vh]">
+                <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Error de Carga</h3>
+                <p className="text-gray-600 mb-6 max-w-md">{error}</p>
+                <div className="flex gap-4">
+                    <Button onClick={() => window.location.reload()} variant="outline">
+                        Recargar Página
+                    </Button>
+                    <Link href="/login">
+                        <Button variant="ghost" className="text-blue-600">
+                            Volver al Inicio
+                        </Button>
+                    </Link>
+                </div>
             </div>
         );
     }
 
-    if (error) {
+    if (authLoading || !user || loading) {
         return (
-            <div className="p-8 text-center">
-                <AlertCircle className="mx-auto h-10 w-10 text-red-400 mb-3" />
-                <p className="text-red-600 font-medium mb-4">{error}</p>
-                <Button onClick={() => { setLoading(true); if (user) fetchDashboardData(user.id); }} variant="outline">
-                    Reintentar
-                </Button>
+            <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="text-gray-500 text-sm">Cargando portal...</p>
             </div>
         );
     }
