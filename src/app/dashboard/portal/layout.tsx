@@ -39,7 +39,7 @@ export default function PatientPortalLayout({
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+        <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col md:flex-row">
             {/* Mobile Header */}
             <div className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center">
                 <span className="font-bold text-lg text-blue-600">Clinova Portal</span>

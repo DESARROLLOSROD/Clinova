@@ -74,7 +74,7 @@ export default function PortalAppointmentsPage() {
     const pastAppointments = appointments.filter(a => new Date(a.start_time) < new Date());
 
     const AppointmentCard = ({ appointment, isPast = false }: { appointment: Appointment, isPast?: boolean }) => (
-        <Card className={`p-5 border-l-4 ${isPast ? 'border-l-gray-300 bg-gray-50' : 'border-l-blue-500'}`}>
+        <Card className={`p-5 border-l-4 text-gray-900 ${isPast ? 'border-l-gray-300 bg-gray-50' : 'border-l-blue-500 bg-white'}`}>
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
                     <h3 className={`font-bold text-lg ${isPast ? 'text-gray-700' : 'text-gray-900'}`}>

@@ -17,7 +17,7 @@ export default function PortalDocumentsPage() {
 
             <div className="grid grid-cols-1 gap-4">
                 {documents.map((doc) => (
-                    <Card key={doc.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <Card key={doc.id} className="p-4 flex items-center justify-between bg-white text-gray-900 hover:bg-gray-50 transition-colors">
                         <div className="flex items-center gap-3">
                             <div className="bg-blue-100 p-2 rounded-lg">
                                 <FileText className="text-blue-600" size={20} />

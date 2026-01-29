@@ -93,7 +93,7 @@ export default function PatientDashboard() {
             </div>
 
             {/* Exercises Card */}
-            <Card className="p-6 border-l-4 border-l-purple-500">
+            <Card className="p-6 border-l-4 border-l-purple-500 bg-white text-gray-900">
                 <div className="flex items-start justify-between">
                     <div>
                         <p className="text-sm font-medium text-gray-500 mb-1">Mi Plan de Ejercicios</p>
@@ -123,7 +123,7 @@ export default function PatientDashboard() {
                 {upcomingAppointments.length > 0 ? (
                     <div className="space-y-3">
                         {upcomingAppointments.map(appointment => (
-                            <Card key={appointment.id} className="p-5 border-l-4 border-l-blue-500">
+                            <Card key={appointment.id} className="p-5 border-l-4 border-l-blue-500 bg-white text-gray-900">
                                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                                     <div>
                                         <h3 className="font-bold text-lg text-gray-900">
@@ -191,7 +191,7 @@ export default function PatientDashboard() {
                     <h2 className="text-lg font-semibold text-gray-700">Historial de Citas</h2>
                     <div className="space-y-3 opacity-75">
                         {pastAppointments.slice(0, 5).map(appointment => (
-                            <Card key={appointment.id} className="p-4 border-l-4 border-l-gray-300 bg-gray-50">
+                            <Card key={appointment.id} className="p-4 border-l-4 border-l-gray-300 bg-gray-50 text-gray-900">
                                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-3">
                                     <div>
                                         <h3 className="font-semibold text-gray-700">
