@@ -104,14 +104,14 @@ export function PatientConsentsSection({ patientId }: PatientConsentsSectionProp
 
     if (loading && signatures.length === 0) {
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white text-gray-900 rounded-xl shadow-sm border border-gray-100 p-6">
                 <p className="text-center text-gray-500">Cargando documentos...</p>
             </div>
         );
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white text-gray-900 rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
                     <FileText className="text-blue-600" size={20} />

@@ -68,7 +68,7 @@ export function PaymentHistory({ payments, patientName, clinicData }: PaymentHis
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white text-gray-900 rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
                     <DollarSign className="text-green-600" size={20} />

@@ -130,14 +130,14 @@ export function PatientPrescriptionsView({ patientId }: PatientPrescriptionsView
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white text-gray-900 rounded-xl shadow-sm border border-gray-100 p-6">
         <p className="text-gray-500 text-center">Cargando prescripciones...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div className="bg-white text-gray-900 rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <Dumbbell className="text-blue-600" size={20} />

@@ -62,7 +62,7 @@ export function MedicalHistorySection({ patientId }: MedicalHistorySectionProps)
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white text-gray-900 rounded-xl shadow-sm border border-gray-100 p-6">
         <p className="text-center text-gray-500">Cargando historial médico...</p>
       </div>
     );
@@ -70,7 +70,7 @@ export function MedicalHistorySection({ patientId }: MedicalHistorySectionProps)
 
   if (!medicalHistory) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white text-gray-900 rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="text-center">
           <Heart className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-medium text-gray-900">Sin Historial Médico</h3>
@@ -88,7 +88,7 @@ export function MedicalHistorySection({ patientId }: MedicalHistorySectionProps)
   const bmi = calculateBMI();
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div className="bg-white text-gray-900 rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <Heart className="text-red-600" size={20} />

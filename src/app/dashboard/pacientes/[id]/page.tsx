@@ -178,7 +178,7 @@ export default async function PatientDetailPage({ params }: { params: Promise<{ 
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white text-gray-900 rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
@@ -248,7 +248,7 @@ export default async function PatientDetailPage({ params }: { params: Promise<{ 
       <PatientPrescriptionsView patientId={patient.id} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white text-gray-900 rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold flex items-center gap-2">
               <Calendar className="text-blue-600" size={20} />
@@ -310,7 +310,7 @@ export default async function PatientDetailPage({ params }: { params: Promise<{ 
         <PatientEvolutionChart data={evolutionData} />
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white text-gray-900 rounded-xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <FileText className="text-purple-600" size={20} />
           Notas de Sesiones (SOAP)
