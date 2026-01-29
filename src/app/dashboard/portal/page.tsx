@@ -25,25 +25,39 @@ interface Appointment {
 
 export default function PatientDashboard() {
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [patientName, setPatientName] = useState('');
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [pendingExercises, setPendingExercises] = useState(0);
     const supabase = createClient();
 
-    useEffect(() => {
-        fetchDashboardData();
-    }, []);
-
     const fetchDashboardData = async () => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            setError(null);
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-            const { data: patient } = await supabase
+            if (authError) {
+                console.error('Auth error:', authError);
+                setError('Error de autenticación. Intenta cerrar sesión y volver a entrar.');
+                return;
+            }
+
+            if (!user) {
+                setError('No se pudo obtener la sesión del usuario.');
+                return;
+            }
+
+            const { data: patient, error: patientError } = await supabase
                 .from('patients')
                 .select('first_name, id')
                 .eq('auth_user_id', user.id)
                 .single();
+
+            if (patientError) {
+                console.error('Patient query error:', patientError);
+                setError('No se encontró el perfil de paciente asociado a tu cuenta.');
+                return;
+            }
 
             if (patient) {
                 setPatientName(patient.first_name);
@@ -72,13 +86,30 @@ export default function PatientDashboard() {
             }
         } catch (error) {
             console.error('Error fetching dashboard:', error);
+            setError('Error al cargar los datos. Intenta recargar la página.');
         } finally {
             setLoading(false);
         }
     };
 
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
     if (loading) {
         return <div className="p-8 text-center text-gray-500">Cargando...</div>;
+    }
+
+    if (error) {
+        return (
+            <div className="p-8 text-center">
+                <AlertCircle className="mx-auto h-10 w-10 text-red-400 mb-3" />
+                <p className="text-red-600 font-medium mb-4">{error}</p>
+                <Button onClick={() => { setLoading(true); fetchDashboardData(); }} variant="outline">
+                    Reintentar
+                </Button>
+            </div>
+        );
     }
 
     const now = new Date();

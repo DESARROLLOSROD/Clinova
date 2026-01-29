@@ -26,7 +26,11 @@ export default function PatientPortalLayout({
     const supabase = createClient();
 
     const handleSignOut = async () => {
-        await supabase.auth.signOut();
+        try {
+            await supabase.auth.signOut();
+        } catch (error) {
+            console.error('Error signing out:', error);
+        }
         router.refresh();
         router.push('/login');
     };
