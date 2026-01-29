@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email'
+import { sendPushNotification } from '@/lib/push-notifications-server'
 
 export async function POST(request: Request) {
   try {
@@ -16,7 +17,9 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { notificationId, email, subject, html, text } = body
+    const { notificationId, userId, email, subject, html, text } = body
+
+    let pushResult = null;
 
     // Option 1: Send notification by ID (from database)
     if (notificationId) {
@@ -30,6 +33,14 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Notification not found' }, { status: 404 })
       }
 
+      // Try sending push if user has devices
+      if (notification.user_id) {
+        pushResult = await sendPushNotification(notification.user_id, {
+          title: notification.title || 'Nueva Notificación',
+          body: notification.message || notification.body || 'Tienes un nuevo mensaje'
+        });
+      }
+
       // Check if Resend is configured
       if (!process.env.RESEND_API_KEY) {
         console.log('Email service not configured. Would send:', {
@@ -39,6 +50,7 @@ export async function POST(request: Request) {
         })
         return NextResponse.json({
           success: true,
+          pushResult,
           message: 'Notification logged (email service not configured)',
         })
       }
@@ -60,31 +72,51 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         emailId: result.id,
+        pushResult,
         message: 'Email sent successfully',
       })
     }
 
-    // Option 2: Send direct email (not from database)
-    if (email && subject && html) {
-      if (!process.env.RESEND_API_KEY) {
-        console.log('Email service not configured. Would send:', { to: email, subject })
+    // Option 2: Send direct notification (email + push)
+    if ((email || userId) && subject) {
+
+      // Send Push if userId provided
+      if (userId) {
+        pushResult = await sendPushNotification(userId, {
+          title: subject,
+          body: text || 'Nuevas actualizaciones en Clinova'
+        });
+      }
+
+      if (email) {
+        if (!process.env.RESEND_API_KEY) {
+          console.log('Email service not configured. Would send:', { to: email, subject })
+          return NextResponse.json({
+            success: true,
+            pushResult,
+            message: 'Email logged (service not configured)',
+          })
+        }
+
+        const result = await sendEmail({
+          to: email,
+          subject,
+          html: html || text || '',
+          text: text || '',
+        })
+
         return NextResponse.json({
           success: true,
-          message: 'Email logged (service not configured)',
+          emailId: result.id,
+          pushResult,
+          message: 'Email sent successfully',
         })
       }
 
-      const result = await sendEmail({
-        to: email,
-        subject,
-        html,
-        text,
-      })
-
       return NextResponse.json({
         success: true,
-        emailId: result.id,
-        message: 'Email sent successfully',
+        pushResult,
+        message: 'Notification processed (Push only)',
       })
     }
 

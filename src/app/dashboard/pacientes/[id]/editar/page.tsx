@@ -33,8 +33,8 @@ export default async function EditPatientPage({ params }: { params: Promise<{ id
             </div>
 
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Editar Paciente</h1>
-                <p className="text-gray-600 text-sm">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Editar Paciente</h1>
+                <p className="text-gray-600 dark:text-gray-300 text-sm">
                     Actualiza los datos de {patient.first_name} {patient.last_name}
                 </p>
             </div>

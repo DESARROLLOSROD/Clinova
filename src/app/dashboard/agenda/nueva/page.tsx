@@ -83,6 +83,40 @@ export default function NewAppointmentPage() {
             const { error } = await supabase.from('appointments').insert(appointmentsToCreate)
             if (error) throw error
 
+            // Send notification
+            try {
+                const { data: patientData } = await supabase
+                    .from('patients')
+                    .select('email, first_name, auth_user_id')
+                    .eq('id', patientId)
+                    .single()
+
+                if (patientData) {
+                    await fetch('/api/notifications/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: patientData.auth_user_id, // For Push Notification
+                            email: patientData.email,         // For Email
+                            subject: 'Nueva Cita Agendada - Clinova',
+                            html: `
+                                <div style="font-family: sans-serif; color: #111;">
+                                    <h1>¡Hola ${patientData.first_name}! 👋</h1>
+                                    <p>Tu cita ha sido agendada correctamente.</p>
+                                    <p><strong>Fecha:</strong> ${date}</p>
+                                    <p><strong>Hora:</strong> ${time}</p>
+                                    <p>Gracias por confiar en Clinova.</p>
+                                </div>
+                            `,
+                            text: `Hola ${patientData.first_name}, tu cita ha sido agendada para el ${date} a las ${time}.`
+                        })
+                    })
+                }
+            } catch (notifyError) {
+                console.error('Error sending notification:', notifyError)
+                // Don't block success if notification fails
+            }
+
             toast.success(recurrence === 'none' ? 'Cita agendada' : `${count} citas agendadas correctamente`)
             router.push('/dashboard/agenda')
             router.refresh()

@@ -71,7 +71,7 @@ export function PatientEditForm({ patient }: PatientEditFormProps) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                     <Label htmlFor="first_name">Nombre *</Label>
@@ -186,7 +186,7 @@ export function PatientEditForm({ patient }: PatientEditFormProps) {
                 </div>
             </div>
 
-            <div className="flex justify-end gap-4 pt-4 border-t border-gray-100">
+            <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <Button
                     type="button"
                     variant="ghost"
