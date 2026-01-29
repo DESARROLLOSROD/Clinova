@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { createFirebaseAdminApp } from '@/lib/firebase-admin';
 
 interface PushNotificationPayload {
     title: string;
@@ -8,12 +9,6 @@ interface PushNotificationPayload {
 
 export async function sendPushNotification(userId: string, payload: PushNotificationPayload) {
     const supabase = await createClient();
-    const serverKey = process.env.FCM_SERVER_KEY;
-
-    if (!serverKey) {
-        console.error('FCM_SERVER_KEY is not configured');
-        return { success: false, error: 'Configuration missing' };
-    }
 
     try {
         // 1. Get user devices (FCM tokens)
@@ -32,44 +27,36 @@ export async function sendPushNotification(userId: string, payload: PushNotifica
             return { success: true, message: 'No devices registered' };
         }
 
-        // 2. Send notifications
         const tokens = devices.map(d => d.fcm_token);
-        const results = [];
 
-        // Legacy FCM API (Simple to implement without firebase-admin)
-        // For production at scale, consider upgrading to HTTP v1 API with service account
-        for (const token of tokens) {
-            try {
-                const response = await fetch('https://fcm.googleapis.com/fcm/send', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `key=${serverKey}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        to: token,
-                        notification: {
-                            title: payload.title,
-                            body: payload.body,
-                            sound: 'default',
-                            badge: 1
-                        },
-                        data: payload.data
-                    }),
-                });
+        // 2. Initialize Firebase Admin
+        const admin = createFirebaseAdminApp();
 
-                const data = await response.json();
-                results.push({ token, success: response.ok, data });
-            } catch (err) {
-                console.error('Error sending to token:', token, err);
-                results.push({ token, success: false, error: err });
-            }
+        // 3. Send via FCM V1 API
+        const response = await admin.messaging().sendEachForMulticast({
+            tokens,
+            notification: {
+                title: payload.title,
+                body: payload.body,
+            },
+            data: payload.data,
+        });
+
+        console.log(`FCM V1: Sent ${response.successCount} messages, failed ${response.failureCount}`);
+
+        if (response.failureCount > 0) {
+            console.error('Failed messages:', response.responses.filter(r => !r.success));
         }
 
-        return { success: true, results };
+        return {
+            success: true,
+            results: response.responses,
+            successCount: response.successCount,
+            failureCount: response.failureCount
+        };
 
     } catch (error) {
-        console.error('Error in sendPushNotification:', error);
+        console.error('Error in sendPushNotification (V1):', error);
         return { success: false, error };
     }
 }
