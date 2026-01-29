@@ -81,37 +81,42 @@ export default function PatientDashboard() {
     };
 
     useEffect(() => {
-        if (authLoading) return;
+        // Independent initialization to bypass UserContext potential hangs
+        const initDashboard = async () => {
+            try {
+                // If we already have a user from context, use it.
+                // But if context is loading (authLoading=true), we don't wait. We check session directly.
+                let currentUserId = user?.id;
 
-        if (!user) {
-            // Provide a graceful fallback or redirect if user context fails
-            const checkSession = async () => {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) {
-                    window.location.href = '/login';
-                    return;
+                if (!currentUserId) {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    currentUserId = session.user.id;
                 }
-                // If session exists but UserContext is slow, we wait (or force fetch)
-                fetchDashboardData(session.user.id);
-            };
-            checkSession();
-            return;
-        }
 
-        fetchDashboardData(user.id);
-    }, [authLoading, user]);
+                await fetchDashboardData(currentUserId);
+            } catch (err) {
+                console.error("Dashboard init error:", err);
+                setError('Error al inicializar el portal.');
+                setLoading(false);
+            }
+        };
 
-    useEffect(() => {
-        // Safety timeout to prevent infinite loading
+        // Safety timeout
         const timer = setTimeout(() => {
-            if (loading || authLoading) {
-                if (!user && !loading) return; // If redirecting, don't show error
+            if (loading) {
                 setLoading(false);
                 setError('La carga está tardando demasiado. Por favor recarga la página.');
             }
         }, 8000);
+
+        initDashboard();
+
         return () => clearTimeout(timer);
-    }, [loading, authLoading, user]);
+    }, [user?.id]); // Only re-run if ID specifically changes
 
     if (error) {
         return (
@@ -133,7 +138,8 @@ export default function PatientDashboard() {
         );
     }
 
-    if (authLoading || !user || loading) {
+    // Only block on LOCAL loading. Ignore authLoading to prevent context hangs.
+    if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
