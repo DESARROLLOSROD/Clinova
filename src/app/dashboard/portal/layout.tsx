@@ -16,6 +16,7 @@ import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
 import { initPushNotifications } from '@/lib/mobile-notifications';
 import { signOutAction } from '@/app/auth/actions';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 export default function PatientPortalLayout({
     children,
@@ -26,16 +27,18 @@ export default function PatientPortalLayout({
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSigningOut, setIsSigningOut] = useState(false);
+    const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
     const supabase = createClient();
 
     useEffect(() => {
-        const registerPush = async () => {
+        const init = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
+                setUserEmail(user.email);
                 await initPushNotifications(user.id);
             }
         };
-        registerPush();
+        init();
     }, []);
 
     const handleSignOut = async () => {
@@ -68,11 +71,14 @@ export default function PatientPortalLayout({
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col md:flex-row">
             {/* Mobile Header */}
-            <div className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+            <div className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-30">
                 <span className="font-bold text-lg text-blue-600">Clinova Portal</span>
-                <Button variant="ghost" size="sm" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-                    {isSidebarOpen ? <X /> : <Menu />}
-                </Button>
+                <div className="flex items-center gap-2">
+                    <NotificationBell userEmail={userEmail} />
+                    <Button variant="ghost" size="sm" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+                        {isSidebarOpen ? <X /> : <Menu />}
+                    </Button>
+                </div>
             </div>
 
             {/* Sidebar */}
@@ -111,7 +117,10 @@ export default function PatientPortalLayout({
                         })}
                     </nav>
 
-                    <div className="p-4 border-t border-gray-100">
+                    <div className="p-4 border-t border-gray-100 space-y-4">
+                        <div className="hidden md:flex justify-center">
+                            <NotificationBell userEmail={userEmail} />
+                        </div>
                         <button
                             onClick={handleSignOut}
                             disabled={isSigningOut}
@@ -126,6 +135,9 @@ export default function PatientPortalLayout({
 
             {/* Main Content */}
             <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+                <div className="hidden md:flex justify-end mb-4">
+                    <NotificationBell userEmail={userEmail} />
+                </div>
                 <div className="max-w-4xl mx-auto space-y-6">
                     {children}
                 </div>
