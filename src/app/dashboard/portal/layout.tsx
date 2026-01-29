@@ -23,16 +23,22 @@ export default function PatientPortalLayout({
     const pathname = usePathname();
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSigningOut, setIsSigningOut] = useState(false);
     const supabase = createClient();
 
     const handleSignOut = async () => {
+        if (isSigningOut) return;
+        setIsSigningOut(true);
         try {
-            await supabase.auth.signOut();
+            await Promise.race([
+                supabase.auth.signOut(),
+                new Promise(resolve => setTimeout(resolve, 2000))
+            ]);
         } catch (error) {
             console.error('Error signing out:', error);
+        } finally {
+            router.replace('/login');
         }
-        router.refresh();
-        router.push('/login');
     };
 
     const navigation = [
@@ -91,10 +97,11 @@ export default function PatientPortalLayout({
                     <div className="p-4 border-t border-gray-100">
                         <button
                             onClick={handleSignOut}
-                            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                            disabled={isSigningOut}
+                            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <LogOut size={20} />
-                            Cerrar Sesión
+                            {isSigningOut ? 'Cerrando...' : 'Cerrar Sesión'}
                         </button>
                     </div>
                 </div>
