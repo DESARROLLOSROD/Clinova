@@ -41,6 +41,17 @@ export default function NewAppointmentPage() {
         const patientId = formData.get('patient_id') as string
 
         try {
+            const { data: { user }, error: authError } = await supabase.auth.getUser()
+            if (authError || !user) throw new Error('Usuario no autenticado')
+
+            const { data: profile } = await supabase
+                .from('user_profiles')
+                .select('clinic_id')
+                .eq('id', user.id)
+                .single()
+
+            if (!profile?.clinic_id) throw new Error('No se encontró la clínica asociada al usuario')
+
             const baseStartDate = new Date(`${date}T${time}`)
             const appointmentsToCreate = []
 
@@ -60,6 +71,7 @@ export default function NewAppointmentPage() {
                 appointmentsToCreate.push({
                     patient_id: patientId,
                     therapist_id: therapistId || null,
+                    clinic_id: profile.clinic_id,
                     start_time: currentStartDate.toISOString(),
                     end_time: currentEndDate.toISOString(),
                     notes: notes,
