@@ -58,8 +58,8 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile)
   const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(null) // For impersonation
-  // Start with loading=true, will be set to false after client-side initialization
-  const [loading, setLoading] = useState(true)
+  // If we have an initial profile from the server, skip loading state
+  const [loading, setLoading] = useState(!initialProfile)
   const supabase = createClient()
 
   const fetchProfile = async (userId: string) => {

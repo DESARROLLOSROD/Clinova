@@ -126,7 +126,7 @@ export function SidebarContent({ onNavigate }: SidebarContentProps) {
         }
     }, [profile?.clinic_id])
 
-    if (loading) {
+    if (loading && !profile) {
         return (
             <div className="flex h-full flex-col bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
                 <div className="px-6 py-8">
