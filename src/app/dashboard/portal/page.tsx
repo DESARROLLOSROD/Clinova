@@ -82,9 +82,21 @@ export default function PatientDashboard() {
 
     useEffect(() => {
         if (authLoading) return;
-        // Wait for user to be resolved by UserContext - don't redirect here,
-        // middleware already handles unauthenticated users
-        if (!user) return;
+
+        if (!user) {
+            // Provide a graceful fallback or redirect if user context fails
+            const checkSession = async () => {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    window.location.href = '/login';
+                    return;
+                }
+                // If session exists but UserContext is slow, we wait (or force fetch)
+                fetchDashboardData(session.user.id);
+            };
+            checkSession();
+            return;
+        }
 
         fetchDashboardData(user.id);
     }, [authLoading, user]);

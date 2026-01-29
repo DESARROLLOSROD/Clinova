@@ -118,9 +118,7 @@ export default function PatientPortalLayout({
                     </nav>
 
                     <div className="p-4 border-t border-gray-100 space-y-4">
-                        <div className="hidden md:flex justify-center">
-                            <NotificationBell userEmail={userEmail} />
-                        </div>
+
                         <button
                             onClick={handleSignOut}
                             disabled={isSigningOut}
