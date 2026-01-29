@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { useUser } from '@/contexts/UserContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Dumbbell, Clock, ArrowRight, User, MapPin, AlertCircle } from 'lucide-react';
@@ -24,61 +25,22 @@ interface Appointment {
 }
 
 export default function PatientDashboard() {
+    const { user, loading: authLoading } = useUser();
     const [loading, setLoading] = useState(true);
-    const [loadingStatus, setLoadingStatus] = useState('Iniciando...');
     const [error, setError] = useState<string | null>(null);
     const [patientName, setPatientName] = useState('');
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [pendingExercises, setPendingExercises] = useState(0);
     const supabase = createClient();
 
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (userId: string) => {
         try {
             setError(null);
-            setLoadingStatus('Verificando autenticación...');
 
-            // Add timeout for auth check to prevent infinite loading
-            const authPromise = supabase.auth.getUser();
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Auth timeout')), 8000)
-            );
-
-            let user = null;
-            let authError = null;
-
-            try {
-                // @ts-ignore
-                const result: any = await Promise.race([authPromise, timeoutPromise]);
-                user = result.data?.user;
-                authError = result.error;
-            } catch (e: any) {
-                console.error('Auth check timed out or failed:', e);
-                // Force logout and redirect
-                await supabase.auth.signOut();
-                window.location.href = '/login';
-                return;
-            }
-
-            if (authError) {
-                console.error('Auth error:', authError);
-                await supabase.auth.signOut(); // Ensure clean state
-                setError('Sesión expirada. Por favor inicia sesión nuevamente.');
-                setTimeout(() => window.location.href = '/login', 2000);
-                return;
-            }
-
-            if (!user) {
-                setError('No se pudo obtener la sesión del usuario.');
-                await supabase.auth.signOut();
-                window.location.href = '/login';
-                return;
-            }
-
-            setLoadingStatus('Buscando perfil de paciente...');
             const { data: patient, error: patientError } = await supabase
                 .from('patients')
                 .select('first_name, id')
-                .eq('auth_user_id', user.id)
+                .eq('auth_user_id', userId)
                 .single();
 
             if (patientError) {
@@ -90,8 +52,6 @@ export default function PatientDashboard() {
             if (patient) {
                 setPatientName(patient.first_name);
 
-                setLoadingStatus('Cargando citas y ejercicios...');
-                // Fetch all appointments with therapist and clinic data
                 const { data: appointmentsData } = await supabase
                     .from('appointments')
                     .select(`
@@ -104,7 +64,6 @@ export default function PatientDashboard() {
 
                 setAppointments(appointmentsData || []);
 
-                // Fetch Active Prescriptions Count
                 const { count } = await supabase
                     .from('patient_exercise_prescriptions')
                     .select('*', { count: 'exact', head: true })
@@ -122,14 +81,21 @@ export default function PatientDashboard() {
     };
 
     useEffect(() => {
-        fetchDashboardData();
-    }, []);
+        if (authLoading) return;
 
-    if (loading) {
+        if (!user) {
+            window.location.href = '/login';
+            return;
+        }
+
+        fetchDashboardData(user.id);
+    }, [authLoading, user]);
+
+    if (authLoading || loading) {
         return (
             <div className="flex flex-col items-center justify-center p-8 space-y-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p className="text-gray-500 text-sm">{loadingStatus}</p>
+                <p className="text-gray-500 text-sm">Cargando portal...</p>
             </div>
         );
     }
@@ -139,7 +105,7 @@ export default function PatientDashboard() {
             <div className="p-8 text-center">
                 <AlertCircle className="mx-auto h-10 w-10 text-red-400 mb-3" />
                 <p className="text-red-600 font-medium mb-4">{error}</p>
-                <Button onClick={() => { setLoading(true); fetchDashboardData(); }} variant="outline">
+                <Button onClick={() => { setLoading(true); if (user) fetchDashboardData(user.id); }} variant="outline">
                     Reintentar
                 </Button>
             </div>
