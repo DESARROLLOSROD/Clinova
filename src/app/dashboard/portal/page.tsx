@@ -36,16 +36,41 @@ export default function PatientDashboard() {
         try {
             setError(null);
             setLoadingStatus('Verificando autenticación...');
-            const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+            // Add timeout for auth check to prevent infinite loading
+            const authPromise = supabase.auth.getUser();
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Auth timeout')), 8000)
+            );
+
+            let user = null;
+            let authError = null;
+
+            try {
+                // @ts-ignore
+                const result: any = await Promise.race([authPromise, timeoutPromise]);
+                user = result.data?.user;
+                authError = result.error;
+            } catch (e: any) {
+                console.error('Auth check timed out or failed:', e);
+                // Force logout and redirect
+                await supabase.auth.signOut();
+                window.location.href = '/login';
+                return;
+            }
 
             if (authError) {
                 console.error('Auth error:', authError);
-                setError('Error de autenticación. Intenta cerrar sesión y volver a entrar.');
+                await supabase.auth.signOut(); // Ensure clean state
+                setError('Sesión expirada. Por favor inicia sesión nuevamente.');
+                setTimeout(() => window.location.href = '/login', 2000);
                 return;
             }
 
             if (!user) {
                 setError('No se pudo obtener la sesión del usuario.');
+                await supabase.auth.signOut();
+                window.location.href = '/login';
                 return;
             }
 

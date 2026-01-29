@@ -34,10 +34,13 @@ export default function PatientPortalLayout({
                 supabase.auth.signOut(),
                 new Promise(resolve => setTimeout(resolve, 2000))
             ]);
+            // Force clear any stale data
+            localStorage.clear();
         } catch (error) {
             console.error('Error signing out:', error);
         } finally {
-            router.replace('/login');
+            // Hard redirect to login
+            window.location.href = '/login';
         }
     };
 
