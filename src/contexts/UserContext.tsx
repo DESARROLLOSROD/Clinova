@@ -58,8 +58,8 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile)
   const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(null) // For impersonation
-  // If we have an initial profile from the server, skip loading state
-  const [loading, setLoading] = useState(!initialProfile)
+  // Always start loading - we need to wait for auth.getUser() to resolve the user object
+  const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchProfile = async (userId: string) => {

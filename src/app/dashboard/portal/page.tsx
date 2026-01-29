@@ -82,16 +82,14 @@ export default function PatientDashboard() {
 
     useEffect(() => {
         if (authLoading) return;
-
-        if (!user) {
-            window.location.href = '/login';
-            return;
-        }
+        // Wait for user to be resolved by UserContext - don't redirect here,
+        // middleware already handles unauthenticated users
+        if (!user) return;
 
         fetchDashboardData(user.id);
     }, [authLoading, user]);
 
-    if (authLoading || loading) {
+    if (authLoading || !user || loading) {
         return (
             <div className="flex flex-col items-center justify-center p-8 space-y-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
