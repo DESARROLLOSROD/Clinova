@@ -11,9 +11,10 @@ import {
     Menu,
     X
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
+import { initPushNotifications } from '@/lib/mobile-notifications';
 
 export default function PatientPortalLayout({
     children,
@@ -25,6 +26,16 @@ export default function PatientPortalLayout({
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSigningOut, setIsSigningOut] = useState(false);
     const supabase = createClient();
+
+    useEffect(() => {
+        const registerPush = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                await initPushNotifications(user.id);
+            }
+        };
+        registerPush();
+    }, []);
 
     const handleSignOut = async () => {
         if (isSigningOut) return;
