@@ -7,8 +7,8 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     // DESARROLLO: Descomenta la siguiente línea y pon la IP de tu PC para probar en el móvil
-    // DESARROLLO: Descomenta la siguiente línea y pon la IP de tu PC para probar en el móvil
     // url: 'http://192.168.1.18:3000',
+    // url: 'http://192.168.67.111:3000',
     // cleartext: true,
 
     // PRODUCCIÓN: Descomenta y pon tu URL de Railway/Vercel
