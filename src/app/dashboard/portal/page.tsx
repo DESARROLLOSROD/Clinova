@@ -95,11 +95,28 @@ export default function PatientDashboard() {
     };
 
     useEffect(() => {
-        // Wait for UserContext to resolve auth state
         if (authLoading) return;
-        if (!user) return;
 
         let cancelled = false;
+
+        const loadData = async () => {
+            // Try user from context first, fall back to getSession
+            let userId = user?.id;
+
+            if (!userId) {
+                const { data: { session } } = await supabase.auth.getSession();
+                userId = session?.user?.id;
+            }
+
+            if (!userId) {
+                // No session at all - redirect to login
+                window.location.href = '/login';
+                return;
+            }
+
+            if (cancelled) return;
+            await fetchDashboardData(userId);
+        };
 
         // Safety timeout using cancelled flag (avoids stale closure)
         const timer = setTimeout(() => {
@@ -109,7 +126,7 @@ export default function PatientDashboard() {
             }
         }, 15000);
 
-        fetchDashboardData(user.id).finally(() => {
+        loadData().finally(() => {
             if (!cancelled) clearTimeout(timer);
         });
 

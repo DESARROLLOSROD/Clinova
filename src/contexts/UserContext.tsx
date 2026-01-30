@@ -144,13 +144,15 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
     // Always initialize user on client side
     initializeUser();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        const profileData = await fetchProfile(session.user.id);
-        setProfile(profileData);
+        // Non-blocking: don't await fetchProfile so setLoading isn't blocked
+        fetchProfile(session.user.id).then(profileData => {
+          if (profileData) setProfile(profileData);
+        });
         if (event === 'SIGNED_IN') {
-          await supabase
+          supabase
             .from('user_profiles')
             .update({ last_login_at: new Date().toISOString() })
             .eq('id', session.user.id);
@@ -158,7 +160,6 @@ export function UserProvider({ children, initialProfile = null }: UserProviderPr
       } else {
         setProfile(null);
       }
-      setLoading(false);
     });
 
     return () => {
