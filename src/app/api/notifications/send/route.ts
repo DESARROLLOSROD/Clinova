@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient, createAdminClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email'
 import { sendPushNotification } from '@/lib/push-notifications-server'
@@ -16,6 +16,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Use admin client for cross-user operations (inserting notifications for other users)
+    const adminSupabase = createAdminClient()
+
     const body = await request.json()
     const { notificationId, userId, email, subject, html, text } = body
 
@@ -23,7 +26,7 @@ export async function POST(request: Request) {
 
     // Option 1: Send notification by ID (already in database)
     if (notificationId) {
-      const { data: notification, error: fetchError } = await supabase
+      const { data: notification, error: fetchError } = await adminSupabase
         .from('notifications')
         .select('*')
         .eq('id', notificationId)
@@ -51,14 +54,18 @@ export async function POST(request: Request) {
     // Option 2: Send direct notification (save to DB + push + email)
     if ((email || userId) && subject) {
 
-      // Save to notifications table so it shows in the bell
+      // Save to notifications table so it shows in the bell (admin client bypasses RLS)
       if (userId) {
-        await supabase.from('notifications').insert({
+        const { error: insertError } = await adminSupabase.from('notifications').insert({
           user_id: userId,
           title: subject,
           message: text || 'Nuevas actualizaciones en Clinova',
           type: 'info',
         });
+
+        if (insertError) {
+          console.error('Error inserting notification:', insertError);
+        }
 
         // Send push notification to device
         pushResult = await sendPushNotification(userId, {

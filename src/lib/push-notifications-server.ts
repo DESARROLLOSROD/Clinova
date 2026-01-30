@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/server';
 import { createFirebaseAdminApp } from '@/lib/firebase-admin';
 
 interface PushNotificationPayload {
@@ -8,7 +8,8 @@ interface PushNotificationPayload {
 }
 
 export async function sendPushNotification(userId: string, payload: PushNotificationPayload) {
-    const supabase = await createClient();
+    // Use admin client to bypass RLS - we need to read another user's devices
+    const supabase = createAdminClient();
 
     try {
         // 1. Get user devices (FCM tokens)

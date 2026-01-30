@@ -33,3 +33,6 @@ CREATE POLICY "Users can update their own notifications"
 ON public.notifications FOR UPDATE
 USING (user_id = auth.uid())
 WITH CHECK (user_id = auth.uid());
+
+-- Enable Realtime for live notification updates in the bell
+ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
