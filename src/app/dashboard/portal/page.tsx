@@ -95,42 +95,29 @@ export default function PatientDashboard() {
     };
 
     useEffect(() => {
-        // Independent initialization to bypass UserContext potential hangs
-        const initDashboard = async () => {
-            try {
-                // If we already have a user from context, use it.
-                // But if context is loading (authLoading=true), we don't wait. We check session directly.
-                let currentUserId = user?.id;
+        // Wait for UserContext to resolve auth state
+        if (authLoading) return;
+        if (!user) return;
 
-                if (!currentUserId) {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (!session) {
-                        window.location.href = '/login';
-                        return;
-                    }
-                    currentUserId = session.user.id;
-                }
+        let cancelled = false;
 
-                await fetchDashboardData(currentUserId);
-            } catch (err) {
-                console.error("Dashboard init error:", err);
-                setError('Error al inicializar el portal.');
-                setLoading(false);
-            }
-        };
-
-        // Safety timeout
+        // Safety timeout using cancelled flag (avoids stale closure)
         const timer = setTimeout(() => {
-            if (loading) {
+            if (!cancelled) {
                 setLoading(false);
                 setError('La carga está tardando demasiado. Por favor recarga la página.');
             }
-        }, 8000);
+        }, 15000);
 
-        initDashboard();
+        fetchDashboardData(user.id).finally(() => {
+            if (!cancelled) clearTimeout(timer);
+        });
 
-        return () => clearTimeout(timer);
-    }, [user?.id]); // Only re-run if ID specifically changes
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [authLoading, user]);
 
     if (error) {
         return (
@@ -152,8 +139,7 @@ export default function PatientDashboard() {
         );
     }
 
-    // Only block on LOCAL loading. Ignore authLoading to prevent context hangs.
-    if (loading) {
+    if (authLoading || !user || loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
