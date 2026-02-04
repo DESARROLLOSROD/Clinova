@@ -41,7 +41,8 @@ export async function POST(request: Request) {
       role,
       first_name,
       last_name,
-      sendInvite = true,
+      password,
+      sendInvite = false,
       additionalData = {}
     } = body;
 
@@ -115,20 +116,20 @@ export async function POST(request: Request) {
       }, { status: 409 });
     }
 
-    // Create user in Supabase Auth
+    // Create user in Supabase Auth with password (no email invite needed)
     const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
-      email_confirm: !sendInvite,
+      password: password || undefined,
+      email_confirm: true, // Auto-confirm so they can log in immediately
       user_metadata: {
         first_name,
         last_name,
         role,
-        clinic_id: additionalData.clinic_id || null, // Ensure clinic_id is stored in metadata
-        ...additionalData
+        clinic_id: additionalData.clinic_id || null,
       },
       app_metadata: {
         role,
-        clinic_id: additionalData.clinic_id || null, // Important for RLS if using custom claims later
+        clinic_id: additionalData.clinic_id || null,
       },
     });
 
@@ -251,64 +252,12 @@ export async function POST(request: Request) {
       }, { status: 200 });
     }
 
-    // Send invitation email if requested
-    if (sendInvite && newUser.user.email) {
-      try {
-        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-          type: 'invite',
-          email: newUser.user.email,
-          options: {
-            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/setup-password`,
-          }
-        });
-
-        if (linkError) throw linkError;
-
-        // Try to send with Resend if available
-        if (process.env.RESEND_API_KEY) {
-          const { sendEmail, emailTemplates } = await import('@/lib/email');
-
-          await sendEmail({
-            to: newUser.user.email,
-            ...emailTemplates.invitationEmail(
-              first_name,
-              additionalData.clinic_name || 'Clinova',
-              linkData.properties.action_link
-            )
-          });
-        } else {
-          // Fallback to Supabase built-in if no Resend Key (which might be why it failed before)
-          // But since we already generated a link, we can't easily fallback to inviteUserByEmail without duplicate logic.
-          // We will log a warning that Resend is missing.
-          console.warn('RESEND_API_KEY missing. Invite email was NOT sent via Resend. Use Supabase SMTP or add Key.');
-
-          // Retry with standard Supabase invite as backup if Resend is not configured
-          await supabaseAdmin.auth.admin.inviteUserByEmail(newUser.user.email, {
-            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/setup-password`,
-          });
-        }
-
-      } catch (inviteError: any) {
-        console.error('Error sending invite:', inviteError);
-        return NextResponse.json({
-          success: true,
-          userId: newUser.user.id,
-          roleSpecificRecord,
-          inviteSent: false,
-          message: 'Usuario creado pero hubo un error al enviar la invitación: ' + inviteError.message
-        });
-      }
-    }
-
     return NextResponse.json({
       success: true,
       userId: newUser.user.id,
       role,
       roleSpecificRecord,
-      inviteSent: sendInvite,
-      message: sendInvite
-        ? 'Usuario creado e invitación enviada'
-        : 'Usuario creado exitosamente'
+      message: 'Usuario creado exitosamente. Ya puede iniciar sesión con su email y contraseña.'
     });
 
   } catch (error: any) {

@@ -23,11 +23,17 @@ export async function POST(request: Request) {
     });
 
     const body = await request.json();
-    const { therapistId, email, sendInvite = true, role = UserRole.THERAPIST } = body;
+    const { therapistId, email, password, sendInvite = false, role = UserRole.THERAPIST } = body;
 
     if (!therapistId || !email) {
       return NextResponse.json({
         error: 'Therapist ID and email are required'
+      }, { status: 400 });
+    }
+
+    if (!password || password.length < 6) {
+      return NextResponse.json({
+        error: 'La contraseña es obligatoria y debe tener al menos 6 caracteres'
       }, { status: 400 });
     }
 
@@ -55,17 +61,20 @@ export async function POST(request: Request) {
       }, { status: 409 });
     }
 
-    // Create user in Supabase Auth
+    // Create user in Supabase Auth with password (no email invite needed)
     const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
-      email_confirm: !sendInvite, // Auto-confirm if not sending invite
+      password: password,
+      email_confirm: true, // Auto-confirm so they can log in immediately
       user_metadata: {
         first_name: therapist.first_name,
         last_name: therapist.last_name,
         role: role,
+        clinic_id: therapist.clinic_id || null,
       },
       app_metadata: {
         role: role,
+        clinic_id: therapist.clinic_id || null,
       },
     });
 
@@ -89,7 +98,6 @@ export async function POST(request: Request) {
 
     if (updateError) {
       console.error('Error updating therapist:', updateError);
-      // User was created but therapist not updated - log this
       return NextResponse.json({
         warning: 'Usuario creado pero registro de fisioterapeuta no actualizado',
         userId: newUser.user.id
@@ -112,33 +120,20 @@ export async function POST(request: Request) {
         });
     }
 
-    // Send invitation email if requested
-    if (sendInvite && newUser.user.email) {
-      const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-        newUser.user.email,
-        {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/setup-password`,
-        }
-      );
-
-      if (inviteError) {
-        console.error('Error sending invite:', inviteError);
-        return NextResponse.json({
-          success: true,
-          userId: newUser.user.id,
-          inviteSent: false,
-          message: 'Usuario creado pero no se pudo enviar el email de invitación'
-        });
-      }
-    }
+    // Update user_profiles to ensure clinic_id and role are correct
+    await supabaseAdmin
+      .from('user_profiles')
+      .update({
+        role: role,
+        clinic_id: therapist.clinic_id || null,
+        full_name: `${therapist.first_name} ${therapist.last_name}`,
+      })
+      .eq('id', newUser.user.id);
 
     return NextResponse.json({
       success: true,
       userId: newUser.user.id,
-      inviteSent: sendInvite,
-      message: sendInvite
-        ? 'User account created and invitation sent'
-        : 'User account created successfully'
+      message: 'Cuenta creada exitosamente. Ya puede iniciar sesión con su email y contraseña.'
     });
 
   } catch (error: any) {

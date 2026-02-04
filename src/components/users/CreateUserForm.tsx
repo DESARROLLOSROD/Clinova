@@ -27,7 +27,10 @@ export default function CreateUserForm({
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [role, setRole] = useState<UserRole>(defaultRole || UserRole.THERAPIST);
-  const [sendInvite, setSendInvite] = useState(true);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Therapist-specific fields
   const [phone, setPhone] = useState('');
@@ -48,6 +51,42 @@ export default function CreateUserForm({
   const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
   const [medicalHistory, setMedicalHistory] = useState('');
   const [primaryTherapistId, setPrimaryTherapistId] = useState('');
+
+  const generatePassword = () => {
+    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lower = 'abcdefghjkmnpqrstuvwxyz';
+    const digits = '23456789';
+    const symbols = '!@#$%&*';
+    const all = upper + lower + digits + symbols;
+    // Ensure at least one of each type
+    let pwd = [
+      upper[Math.floor(Math.random() * upper.length)],
+      lower[Math.floor(Math.random() * lower.length)],
+      digits[Math.floor(Math.random() * digits.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+    ];
+    for (let i = pwd.length; i < 12; i++) {
+      pwd.push(all[Math.floor(Math.random() * all.length)]);
+    }
+    // Shuffle
+    for (let i = pwd.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
+    }
+    const generated = pwd.join('');
+    setPassword(generated);
+    setConfirmPassword(generated);
+    setGeneratedPassword(generated);
+    setCopied(false);
+  };
+
+  const copyPassword = async () => {
+    if (generatedPassword) {
+      await navigator.clipboard.writeText(generatedPassword);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const { profile } = useUser(); // Get current user profile
   const [clinics, setClinics] = useState<Array<{ id: string; name: string }>>([]);
@@ -99,6 +138,23 @@ export default function CreateUserForm({
     setIsSubmitting(true);
 
     try {
+      // Validate password
+      if (!password) {
+        setError('La contraseña es obligatoria');
+        setIsSubmitting(false);
+        return;
+      }
+      if (password.length < 6) {
+        setError('La contraseña debe tener al menos 6 caracteres');
+        setIsSubmitting(false);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Las contraseñas no coinciden');
+        setIsSubmitting(false);
+        return;
+      }
+
       // Prepare additional data based on role
       let additionalData: any = {
         clinic_id: selectedClinicId || undefined // Include selected clinic if available
@@ -155,7 +211,8 @@ export default function CreateUserForm({
           first_name: firstName,
           last_name: lastName,
           role,
-          sendInvite,
+          password,
+          sendInvite: false,
           additionalData,
         }),
       });
@@ -181,6 +238,9 @@ export default function CreateUserForm({
       setEmergencyContactPhone('');
       setMedicalHistory('');
       setPrimaryTherapistId('');
+      setPassword('');
+      setConfirmPassword('');
+      setGeneratedPassword(null);
 
       if (onSuccess) {
         onSuccess(data.userId, role);
@@ -514,19 +574,66 @@ export default function CreateUserForm({
           </div>
         )}
 
-        {/* Send Invite Option */}
-        <div className="mt-6">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={sendInvite}
-              onChange={(e) => setSendInvite(e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="text-sm text-gray-700">
-              Enviar email de invitación para configurar contraseña
-            </span>
-          </label>
+        {/* Password */}
+        <div className="mt-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-800">Contraseña de Acceso</h3>
+            <button
+              type="button"
+              onClick={generatePassword}
+              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
+              Generar Contraseña Segura
+            </button>
+          </div>
+
+          {generatedPassword && (
+            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
+              <code className="flex-1 text-sm font-mono font-bold text-green-800 select-all">
+                {generatedPassword}
+              </code>
+              <button
+                type="button"
+                onClick={copyPassword}
+                className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors whitespace-nowrap"
+              >
+                {copied ? 'Copiada!' : 'Copiar'}
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Contraseña *
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setGeneratedPassword(null); }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                minLength={6}
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Confirmar Contraseña *
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setGeneratedPassword(null); }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                minLength={6}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">
+            El usuario podrá iniciar sesión con su email y esta contraseña.
+          </p>
         </div>
 
         {/* Action Buttons */}
