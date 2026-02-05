@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft, Plus, X, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -25,6 +25,10 @@ export default function NewTreatmentTemplatePage() {
     duration_minutes: '',
     frequency: '',
     notes: '',
+    subjective: '',
+    objective: '',
+    assessment: '',
+    plan: '',
     is_active: true,
   });
 
@@ -83,6 +87,10 @@ export default function NewTreatmentTemplatePage() {
           objectives: objectives.filter((o) => o.trim() !== ''),
           contraindications: contraindications.filter((c) => c.trim() !== ''),
           notes: formData.notes || null,
+          subjective: formData.subjective || null,
+          objective: formData.objective || null,
+          assessment: formData.assessment || null,
+          plan: formData.plan || null,
           created_by: user.user?.id,
           is_active: formData.is_active,
         })
@@ -230,6 +238,72 @@ export default function NewTreatmentTemplatePage() {
             </label>
           </div>
         </div>
+
+        {/* Sección SOAP */}
+        < div className="bg-white p-6 rounded-lg shadow space-y-6" >
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <FileText className="text-blue-600" size={24} />
+            Estructura SOAP (Opcional)
+          </h2>
+          <p className="text-sm text-gray-500">
+            Define el contenido predeterminado para las notas de sesión. Esto agilizará el llenado durante la consulta.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="subjective" className="block text-sm font-medium text-gray-700 mb-2">
+                Subjetivo (S)
+              </label>
+              <textarea
+                id="subjective"
+                value={formData.subjective}
+                onChange={(e) => setFormData({ ...formData, subjective: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 border border-blue-100 bg-blue-50/30 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ej: Paciente refiere dolor punzante en..."
+              />
+            </div>
+            <div>
+              <label htmlFor="objective" className="block text-sm font-medium text-gray-700 mb-2">
+                Objetivo (O)
+              </label>
+              <textarea
+                id="objective"
+                value={formData.objective}
+                onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 border border-blue-100 bg-blue-50/30 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ej: Palpación dolorosa en..."
+              />
+            </div>
+            <div>
+              <label htmlFor="assessment" className="block text-sm font-medium text-gray-700 mb-2">
+                Análisis (A)
+              </label>
+              <textarea
+                id="assessment"
+                value={formData.assessment}
+                onChange={(e) => setFormData({ ...formData, assessment: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 border border-blue-100 bg-blue-50/30 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ej: Signos compatibles con..."
+              />
+            </div>
+            <div>
+              <label htmlFor="plan" className="block text-sm font-medium text-gray-700 mb-2">
+                Plan (P)
+              </label>
+              <textarea
+                id="plan"
+                value={formData.plan}
+                onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 border border-blue-100 bg-blue-50/30 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ej: Aplicación de ultrasonido 5 min..."
+              />
+            </div>
+          </div>
+        </div >
 
         <div className="bg-white p-6 rounded-lg shadow space-y-4">
           <div className="flex justify-between items-center">

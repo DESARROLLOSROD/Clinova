@@ -60,9 +60,7 @@ export async function middleware(request: NextRequest) {
 
         // Patient routing (redirect to portal)
         if (profile?.role === 'patient' && request.nextUrl.pathname.startsWith('/dashboard')) {
-            if (!request.nextUrl.pathname.startsWith('/dashboard/portal')) {
-                return redirect('/dashboard/portal')
-            }
+            return redirect('/portal')
         }
 
         // Super admin only paths
