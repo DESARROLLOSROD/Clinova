@@ -125,6 +125,54 @@ export default async function ReportsPage() {
       100
       : 0;
 
+  // Estadísticas para Gráficos (Últimos 6 meses)
+  const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1).toISOString();
+
+  // Fetch Payments for Chart
+  const { data: paymentsChartData } = await supabase
+    .from('payments')
+    .select('amount, payment_date')
+    .eq('status', 'completed')
+    .gte('payment_date', sixMonthsAgo)
+    .order('payment_date', { ascending: true });
+
+  // Fetch Sessions for Chart
+  const { data: sessionsChartData } = await supabase
+    .from('sessions')
+    .select('created_at')
+    .gte('created_at', sixMonthsAgo)
+    .order('created_at', { ascending: true });
+
+  // Process Revenue Data
+  const revenueByMonth = (paymentsChartData || []).reduce((acc: any, payment) => {
+    const month = new Date(payment.payment_date).toLocaleDateString('es-MX', { month: 'short' });
+    acc[month] = (acc[month] || 0) + payment.amount;
+    return acc;
+  }, {});
+
+  const revenueData = Object.entries(revenueByMonth).map(([name, value]) => ({
+    name: (name as string).charAt(0).toUpperCase() + (name as string).slice(1),
+    value: value as number
+  }));
+
+  // Process Sessions Data
+  const sessionsByMonth = (sessionsChartData || []).reduce((acc: any, session) => {
+    const month = new Date(session.created_at).toLocaleDateString('es-MX', { month: 'short' });
+    acc[month] = (acc[month] || 0) + 1;
+    return acc;
+  }, {});
+
+  const sessionsData = Object.entries(sessionsByMonth).map(([name, value]) => ({
+    name: (name as string).charAt(0).toUpperCase() + (name as string).slice(1),
+    value: value as number
+  }));
+
+  // Patient Distribution Data
+  const patientDistribution = [
+    { name: 'Activos', value: activePatients || 0, fill: '#3b82f6' },
+    { name: 'Inactivos', value: (totalPatients || 0) - (activePatients || 0), fill: '#94a3b8' },
+  ];
+
   return (
     <div className="space-y-8 transition-colors pb-8">
       <div>
@@ -179,7 +227,11 @@ export default async function ReportsPage() {
       {/* Gráficos Principales */}
       <div>
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Análisis Visual</h2>
-        <StatsCharts />
+        <StatsCharts
+          sessionsData={sessionsData}
+          revenueData={revenueData}
+          patientDistribution={patientDistribution}
+        />
       </div>
 
       {/* Secciones de Detalle */}
