@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { sendWhatsApp } from '@/lib/twilio';
 
 // Initialize Resend with API Key (should be in env vars)
 // Lazy initialization inside handler to avoid build errors if env var is missing
@@ -54,7 +55,9 @@ export async function GET(request: Request) {
           phone
         ),
         clinics (
-            name
+            name,
+            email,
+            phone
         )
       `)
             .eq('reminder_sent', false)
@@ -91,9 +94,14 @@ export async function GET(request: Request) {
             });
 
             try {
-                const { data, error } = await resend.emails.send({
-                    from: 'Clinova <noreply@resend.dev>', // Update with verify domain in prod
+                // Send Email with Dynamic Reply-To
+                const replyTo = clinic?.email || 'soporte@clinova.app';
+                const clinicPhone = clinic?.phone || '';
+
+                const { data: emailData, error: emailError } = await resend.emails.send({
+                    from: 'Clinova <noreply@resend.dev>',
                     to: patient.email,
+                    replyTo: replyTo,
                     subject: `Recordatorio de Cita: ${date}`,
                     html: `
                     <h1>Hola, ${patientName}</h1>
@@ -102,24 +110,44 @@ export async function GET(request: Request) {
                     <p>Si necesitas reagendar, por favor contáctanos.</p>
                     <br/>
                     <p>Atentamente,<br/>Equipo ${clinicName}</p>
+                    ${clinicPhone ? `<p>Tel: ${clinicPhone}</p>` : ''}
+                    ${clinic.email ? `<p>Email: ${clinic.email}</p>` : ''}
                 `
                 });
 
-                if (data) {
-                    // Mark as sent
+                // Send WhatsApp (if phone exists)
+                let whatsappResult = null;
+                if (patient.phone) {
+                    let phone = patient.phone.replace(/\D/g, '');
+                    if (phone.length === 10) phone = `52${phone}`;
+                    if (!phone.startsWith('+')) phone = `+${phone}`;
+
+                    const whatsappBody = `Hola ${patientName}, recordatorio de tu cita en ${clinicName} el ${date}. ` +
+                        (clinicPhone ? `Dudas al: ${clinicPhone}` : '');
+
+                    whatsappResult = await sendWhatsApp(phone, whatsappBody);
+                }
+
+                if (emailData || whatsappResult?.success) {
+                    // Mark as sent if at least one succeeded
                     await supabase
                         .from('appointments')
                         .update({ reminder_sent: true })
                         .eq('id', appt.id);
 
-                    results.push({ id: appt.id, status: 'sent', email: patient.email });
+                    results.push({
+                        id: appt.id,
+                        status: 'sent',
+                        email: emailData ? 'ok' : 'skip/fail',
+                        whatsapp: whatsappResult ? (whatsappResult.success ? 'ok' : whatsappResult.error) : 'no-phone'
+                    });
                 } else {
-                    console.error('Error sending email:', error);
-                    results.push({ id: appt.id, status: 'failed', error });
+                    console.error('All notifications failed');
+                    results.push({ id: appt.id, status: 'failed', emailError, whatsappError: whatsappResult?.error });
                 }
-            } catch (emailErr) {
-                console.error('Exception sending email:', emailErr);
-                results.push({ id: appt.id, status: 'failed', error: emailErr });
+            } catch (err) {
+                console.error('Exception processing notification:', err);
+                results.push({ id: appt.id, status: 'failed', error: err });
             }
         }
 

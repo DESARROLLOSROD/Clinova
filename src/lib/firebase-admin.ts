@@ -1,28 +1,21 @@
-import 'server-only';
-import admin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 
-function formatPrivateKey(key: string) {
-    return key.replace(/\\n/g, '\n');
+// Initialize Firebase Admin
+// Checks if already initialized to avoid hot-reload errors
+if (!admin.apps.length) {
+    try {
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                // Handle private key newlines correctly
+                privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+            }),
+        });
+        console.log('Firebase Admin initialized successfully');
+    } catch (error) {
+        console.error('Firebase Admin initialization failed:', error);
+    }
 }
 
-export function createFirebaseAdminApp() {
-    if (admin.apps.length > 0) {
-        return admin.app();
-    }
-
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-    if (!projectId || !clientEmail || !privateKey) {
-        throw new Error('Missing Firebase Admin credentials in environment variables.');
-    }
-
-    return admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId,
-            clientEmail,
-            privateKey: formatPrivateKey(privateKey),
-        }),
-    });
-}
+export const firebaseAdmin = admin;

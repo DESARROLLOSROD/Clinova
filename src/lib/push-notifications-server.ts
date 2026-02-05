@@ -1,63 +1,43 @@
-import { createAdminClient } from '@/utils/supabase/server';
-import { createFirebaseAdminApp } from '@/lib/firebase-admin';
+import { firebaseAdmin } from './firebase-admin';
+import { createClient } from '@/utils/supabase/server';
 
-interface PushNotificationPayload {
-    title: string;
-    body: string;
-    data?: Record<string, string>;
-}
-
-export async function sendPushNotification(userId: string, payload: PushNotificationPayload) {
-    // Use admin client to bypass RLS - we need to read another user's devices
-    const supabase = createAdminClient();
-
+/**
+ * Sends a push notification to a specific user via their registered FCM token.
+ */
+export async function sendPushNotificationToUser(userId: string, title: string, body: string, data?: any) {
     try {
-        // 1. Get user devices (FCM tokens)
-        const { data: devices, error } = await supabase
+        const supabase = await createClient();
+
+        // 1. Get user's FCM token from Supabase
+        const { data: userDevice, error } = await supabase
             .from('user_devices')
             .select('fcm_token')
-            .eq('user_id', userId);
+            .eq('user_id', userId)
+            .order('last_active', { ascending: false })
+            .limit(1)
+            .single();
 
-        if (error) {
-            console.error('Error fetching user devices:', error);
-            return { success: false, error: error.message };
+        if (error || !userDevice?.fcm_token) {
+            console.log(`No active device token found for user ${userId}`);
+            return { success: false, error: 'No token found' };
         }
 
-        if (!devices || devices.length === 0) {
-            console.log('No devices found for user:', userId);
-            return { success: true, message: 'No devices registered' };
-        }
-
-        const tokens = devices.map(d => d.fcm_token);
-
-        // 2. Initialize Firebase Admin
-        const admin = createFirebaseAdminApp();
-
-        // 3. Send via FCM V1 API
-        const response = await admin.messaging().sendEachForMulticast({
-            tokens,
+        // 2. Send notification via Firebase Admin
+        const message = {
             notification: {
-                title: payload.title,
-                body: payload.body,
+                title,
+                body,
             },
-            data: payload.data,
-        });
-
-        console.log(`FCM V1: Sent ${response.successCount} messages, failed ${response.failureCount}`);
-
-        if (response.failureCount > 0) {
-            console.error('Failed messages:', response.responses.filter(r => !r.success));
-        }
-
-        return {
-            success: true,
-            results: response.responses,
-            successCount: response.successCount,
-            failureCount: response.failureCount
+            data: data || {},
+            token: userDevice.fcm_token,
         };
 
+        const response = await firebaseAdmin.messaging().send(message);
+        console.log('Successfully sent push notification:', response);
+        return { success: true, messageId: response };
+
     } catch (error) {
-        console.error('Error in sendPushNotification (V1):', error);
+        console.error('Error sending push notification:', error);
         return { success: false, error };
     }
 }

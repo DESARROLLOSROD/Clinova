@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createClient } from '@/utils/supabase/server'
 import Stripe from 'stripe'
+import { sendPushNotificationToUser } from '@/lib/push-notifications-server';
 
 export async function POST(req: Request) {
     const body = await req.text()
@@ -45,6 +46,21 @@ export async function POST(req: Request) {
             if (error) {
                 console.error('Error updating appointment:', error)
                 return new NextResponse('Database Error', { status: 500 })
+            }
+
+            // Fetch appointment details to notify therapist
+            const { data: appointment } = await supabase
+                .from('appointments')
+                .select('therapist_id, start_time')
+                .eq('id', appointmentId)
+                .single();
+
+            if (appointment?.therapist_id) {
+                await sendPushNotificationToUser(
+                    appointment.therapist_id,
+                    'Pago Recibido',
+                    `Se ha confirmado el pago para la cita del ${new Date(appointment.start_time).toLocaleDateString()}.`
+                );
             }
 
             // Optional: Insert into payments table if you have the schema
