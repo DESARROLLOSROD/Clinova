@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
         return supabaseResponse
     }
 
-    const publicPaths = ['/login', '/signup', '/reset-password', '/auth']
+    const publicPaths = ['/login', '/signup', '/reset-password', '/auth', '/api/cron', '/api/test-notifications', '/api/webhooks']
     const isPublicPath = publicPaths.some((path) => request.nextUrl.pathname.startsWith(path))
 
     if (!user && !isPublicPath) {
