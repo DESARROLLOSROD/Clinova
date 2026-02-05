@@ -119,7 +119,14 @@ export async function GET(request: Request) {
                 let whatsappResult = null;
                 if (patient.phone) {
                     let phone = patient.phone.replace(/\D/g, '');
-                    if (phone.length === 10) phone = `52${phone}`;
+                    // Mexico logic: 10 digits -> +521...
+                    if (phone.length === 10) {
+                        phone = `521${phone}`;
+                    } else if (phone.length === 12 && phone.startsWith('52') && phone[2] !== '1') {
+                        // Handle case where 52 is present but 1 is missing
+                        phone = `521${phone.substring(2)}`;
+                    }
+
                     if (!phone.startsWith('+')) phone = `+${phone}`;
 
                     const whatsappBody = `Hola ${patientName}, recordatorio de tu cita en ${clinicName} el ${date}. ` +

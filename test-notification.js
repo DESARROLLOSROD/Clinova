@@ -3,9 +3,11 @@ const https = require('https');
 
 const data = JSON.stringify({
     type: 'whatsapp',
-    phone: '+526182692461',
-    message: 'Prueba Node.js'
+    phone: '+5216182692461',
+    message: 'Your appointment is coming up on Today at 8:00PM'
 });
+// Note: This exact text "Your appointment is coming up on {{date}} at {{time}}" is a pre-approved sandbox template.
+// Using it usually bypasses "Session" restrictions in the sandbox.
 
 const options = {
     hostname: 'clinova-production-561d.up.railway.app',
