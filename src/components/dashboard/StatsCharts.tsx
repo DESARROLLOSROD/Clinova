@@ -9,31 +9,27 @@ import {
     Tooltip,
     ResponsiveContainer,
     AreaChart,
-    Area
+    Area,
+    PieChart,
+    Pie,
+    Cell,
+    Legend
 } from 'recharts'
 import { useState, useEffect } from 'react'
 
-const sessionData = [
-    { name: 'Lun', sesiones: 12 },
-    { name: 'Mar', sesiones: 19 },
-    { name: 'Mie', sesiones: 15 },
-    { name: 'Jue', sesiones: 22 },
-    { name: 'Vie', sesiones: 30 },
-    { name: 'Sab', sesiones: 10 },
-    { name: 'Dom', sesiones: 5 },
-]
+interface ChartData {
+    name: string
+    value: number
+    fill?: string
+}
 
-const revenueData = [
-    { name: 'Lun', ingresos: 1200 },
-    { name: 'Mar', ingresos: 1900 },
-    { name: 'Mie', ingresos: 1500 },
-    { name: 'Jue', ingresos: 2200 },
-    { name: 'Vie', ingresos: 3000 },
-    { name: 'Sab', ingresos: 1000 },
-    { name: 'Dom', ingresos: 800 },
-]
+interface StatsChartsProps {
+    sessionsData: ChartData[]
+    revenueData: ChartData[]
+    patientDistribution: ChartData[]
+}
 
-const CustomTooltip = ({ active, payload, label, prefix = '' }: any) => {
+const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }: any) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-white dark:bg-gray-800 p-4 border border-gray-100 dark:border-gray-700 shadow-lg rounded-xl">
@@ -41,7 +37,7 @@ const CustomTooltip = ({ active, payload, label, prefix = '' }: any) => {
                 <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
                     {prefix}{payload[0].value.toLocaleString()}
                     <span className="text-gray-500 dark:text-gray-400 ml-1 font-normal">
-                        {payload[0].dataKey === 'ingresos' ? 'MXN' : 'sesiones'}
+                        {suffix || (payload[0].dataKey === 'value' ? '' : '')}
                     </span>
                 </p>
             </div>
@@ -50,7 +46,7 @@ const CustomTooltip = ({ active, payload, label, prefix = '' }: any) => {
     return null
 }
 
-export function StatsCharts() {
+export function StatsCharts({ sessionsData, revenueData, patientDistribution }: StatsChartsProps) {
     const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
@@ -72,13 +68,13 @@ export function StatsCharts() {
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md min-w-0">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Sesiones Semanales</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Rendimiento de citas</p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Sesiones</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Rendimiento en el periodo</p>
                     </div>
                 </div>
                 <div className="w-full" style={{ height: 300 }}>
                     <ResponsiveContainer width="99%" height="100%">
-                        <BarChart data={sessionData}>
+                        <BarChart data={sessionsData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-gray-800" />
                             <XAxis
                                 dataKey="name"
@@ -92,9 +88,9 @@ export function StatsCharts() {
                                 tickLine={false}
                                 tick={{ fill: '#94a3b8', fontSize: 12 }}
                             />
-                            <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc', opacity: 0.8 }} />
+                            <Tooltip content={<CustomTooltip suffix=" sesiones" />} cursor={{ fill: '#f8fafc', opacity: 0.8 }} />
                             <Bar
-                                dataKey="sesiones"
+                                dataKey="value"
                                 fill="#3b82f6"
                                 radius={[6, 6, 0, 0]}
                                 barSize={32}
@@ -109,7 +105,7 @@ export function StatsCharts() {
             <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md min-w-0">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Ingresos Semanales</h3>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Ingresos</h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Tendencia financiera</p>
                     </div>
                 </div>
@@ -139,7 +135,7 @@ export function StatsCharts() {
                             <Tooltip content={<CustomTooltip prefix="$" />} />
                             <Area
                                 type="monotone"
-                                dataKey="ingresos"
+                                dataKey="value"
                                 stroke="#10b981"
                                 strokeWidth={3}
                                 fillOpacity={1}
@@ -147,6 +143,37 @@ export function StatsCharts() {
                                 className="stroke-emerald-500 dark:stroke-emerald-400"
                             />
                         </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* Gráfico de Distribución de Pacientes */}
+            <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md min-w-0 lg:col-span-2 xl:col-span-1">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Distribución de Pacientes</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Estado actual</p>
+                    </div>
+                </div>
+                <div className="w-full relative" style={{ height: 300 }}>
+                    <ResponsiveContainer width="99%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={patientDistribution}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={5}
+                                dataKey="value"
+                            >
+                                {patientDistribution.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                                ))}
+                            </Pie>
+                            <Tooltip content={<CustomTooltip />} />
+                            <Legend verticalAlign="bottom" height={36} />
+                        </PieChart>
                     </ResponsiveContainer>
                 </div>
             </div>

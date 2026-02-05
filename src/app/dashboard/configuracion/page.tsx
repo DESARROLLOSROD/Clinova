@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { NotificationSettings } from '@/components/settings/NotificationSettings'
 import { LogoUpload } from '@/components/settings/LogoUpload'
 
 export default function ClinicConfigurationPage() {
@@ -244,6 +245,9 @@ export default function ClinicConfigurationPage() {
             </div>
           </div>
         </Card>
+
+        {/* Notificaciones */}
+        <NotificationSettings />
 
         <div className="flex justify-end pt-4">
           <Button type="submit" disabled={saving} size="lg" className="w-full md:w-auto">

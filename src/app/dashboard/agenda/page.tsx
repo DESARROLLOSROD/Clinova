@@ -11,15 +11,16 @@ import Link from 'next/link'
 // OR we can pass a server action or just use router in the Client Component.
 // Let's go with the Client Component passing `onDateChange` that updates the URL.
 
+import { AgendaExportButtons } from '@/components/agenda/AgendaExportButtons'
+
 export default async function AgendaPage({
     searchParams,
 }: {
-    searchParams: { date?: string }
+    searchParams: Promise<{ date?: string }>
 }) {
     const supabase = await createClient()
 
     // Parse date from URL or default to today
-    // Await searchParams before accessing properties
     const params = await searchParams;
     const currentDate = params.date ? parseISO(params.date) : new Date()
 
@@ -44,12 +45,15 @@ export default async function AgendaPage({
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Agenda</h1>
                     <p className="text-gray-600 dark:text-gray-400 text-sm">Gestiona las citas y sesiones.</p>
                 </div>
-                <Link href="/dashboard/agenda/nueva">
-                    <Button className="gap-2">
-                        <Plus size={18} />
-                        Nueva Cita
-                    </Button>
-                </Link>
+                <div className="flex gap-2">
+                    <AgendaExportButtons appointments={appointments || []} />
+                    <Link href="/dashboard/agenda/nueva">
+                        <Button className="gap-2">
+                            <Plus size={18} />
+                            Nueva Cita
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             <div className="flex-1 min-h-0">

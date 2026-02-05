@@ -4,6 +4,15 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { InvoiceGenerator } from '@/components/payments/InvoiceGenerator';
+import { exportToExcel, exportToPdf } from '@/lib/exportUtils';
+import { FileSpreadsheet, FileText, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type PaymentMethod = 'cash' | 'card' | 'transfer' | 'insurance';
 type PaymentStatus = 'pending' | 'completed' | 'cancelled' | 'refunded';
@@ -108,6 +117,36 @@ export default function PaymentsPage() {
     .filter(p => p.status === 'pending')
     .reduce((sum, payment) => sum + payment.amount, 0);
 
+  const prepareExportData = (): any[] => {
+    return filteredPayments.map(p => ({
+      date: new Date(p.payment_date).toLocaleDateString('es-ES'),
+      patient: `${p.patients.first_name} ${p.patients.last_name}`,
+      amount: p.amount,
+      method: methodLabels[p.method] || p.method,
+      status: statusLabels[p.status] || p.status,
+      concept: p.description || (p.sessions ? 'Sesión' : 'Consulta')
+    }))
+  }
+
+  const exportColumns = [
+    { header: 'Fecha', key: 'date', width: 15 },
+    { header: 'Paciente', key: 'patient', width: 25 },
+    { header: 'Concepto', key: 'concept', width: 25 },
+    { header: 'Monto', key: 'amount', width: 15 },
+    { header: 'Método', key: 'method', width: 15 },
+    { header: 'Estado', key: 'status', width: 15 },
+  ]
+
+  const handleExportExcel = async () => {
+    const data = prepareExportData()
+    await exportToExcel(data, exportColumns, `Reporte_Pagos_${new Date().toISOString().split('T')[0]}`)
+  }
+
+  const handleExportPdf = () => {
+    const data = prepareExportData()
+    exportToPdf(data, exportColumns, `Reporte_Pagos_${new Date().toISOString().split('T')[0]}`, 'Reporte de Pagos')
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -115,12 +154,31 @@ export default function PaymentsPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Pagos</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Gestión de pagos y facturación</p>
         </div>
-        <button
-          onClick={() => router.push('/dashboard/pagos/nuevo')}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-        >
-          + Registrar Pago
-        </button>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Download size={16} />
+                Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={handleExportExcel} className="gap-2 cursor-pointer">
+                <FileSpreadsheet size={16} className="text-green-600" /> Excel (.xlsx)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPdf} className="gap-2 cursor-pointer">
+                <FileText size={16} className="text-red-600" /> PDF (.pdf)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <button
+            onClick={() => router.push('/dashboard/pagos/nuevo')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            + Registrar Pago
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
