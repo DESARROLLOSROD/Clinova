@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Calendar, Activity, Dumbbell, TrendingUp } from 'lucide-react';
 import { ProgressChart } from '@/components/portal/ProgressChart';
+import { PaymentButton } from '@/components/portal/PaymentButton';
 
 export default async function PortalDashboard() {
     const supabase = await createClient();
@@ -32,7 +33,7 @@ export default async function PortalDashboard() {
     // Fetch upcoming appointment
     const { data: nextAppointment } = await supabase
         .from('appointments')
-        .select('*, clinics(name, address)')
+        .select('*, clinics(name, address), clinic_services(price)')
         .eq('patient_id', patient.id)
         .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true })
@@ -74,16 +75,29 @@ export default async function PortalDashboard() {
                     </CardHeader>
                     <CardContent>
                         {nextAppointment ? (
-                            <div className="space-y-2">
-                                <p className="text-2xl font-bold text-slate-900">
-                                    {new Date(nextAppointment.start_time).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
-                                </p>
-                                <p className="text-xl text-blue-600">
-                                    {new Date(nextAppointment.start_time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
-                                </p>
-                                <p className="text-slate-500 pt-2 border-t mt-2">
-                                    {nextAppointment.clinics?.name} - {nextAppointment.clinics?.address}
-                                </p>
+                            <div className="space-y-4">
+                                <div>
+                                    <p className="text-2xl font-bold text-slate-900">
+                                        {new Date(nextAppointment.start_time).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                    </p>
+                                    <p className="text-xl text-blue-600">
+                                        {new Date(nextAppointment.start_time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                    <p className="text-slate-500 pt-2 border-t mt-2">
+                                        {nextAppointment.clinics?.name} - {nextAppointment.clinics?.address}
+                                    </p>
+                                </div>
+
+                                <div className="pt-2">
+                                    {/* Payment Status Logic */}
+                                    {/* We need to fetch the price from the service or fallback */}
+                                    {/* For now, assuming standard price or fetching from joined service */}
+                                    <PaymentButton
+                                        appointmentId={nextAppointment.id}
+                                        amount={nextAppointment.clinic_services?.price || 500}
+                                        disabled={nextAppointment.payment_status === 'paid'}
+                                    />
+                                </div>
                             </div>
                         ) : (
                             <p className="text-slate-500">No tienes citas programadas.</p>

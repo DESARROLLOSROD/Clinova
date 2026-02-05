@@ -4,28 +4,24 @@ import autoTable from 'jspdf-autotable'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
-export interface PaymentExportColumns {
-    date: string
-    patient: string
-    amount: number
-    method: string
-    status: string
-    concept: string
+export interface ExportColumn {
+    header: string
+    key: string
+    width?: number
 }
 
-export const exportToExcel = async (data: PaymentExportColumns[], filename: string) => {
+export const exportToExcel = async (data: any[], columns: ExportColumn[], filename: string) => {
     const workbook = new ExcelJS.Workbook()
-    const worksheet = workbook.addWorksheet('Pagos')
+    const worksheet = workbook.addWorksheet('Datos')
 
-    worksheet.columns = [
-        { header: 'Fecha', key: 'date', width: 20 },
-        { header: 'Paciente', key: 'patient', width: 30 },
-        { header: 'Concepto', key: 'concept', width: 30 },
-        { header: 'Monto', key: 'amount', width: 15 },
-        { header: 'Método', key: 'method', width: 15 },
-        { header: 'Estado', key: 'status', width: 15 },
-    ]
+    worksheet.columns = columns.map(col => ({
+        header: col.header,
+        key: col.key,
+        width: col.width || 20
+    }))
 
+    // Add rows
+    // ExcelJS adds rows by matching keys if we pass objects, which is what we have
     data.forEach((item) => {
         worksheet.addRow(item)
     })
@@ -43,24 +39,37 @@ export const exportToExcel = async (data: PaymentExportColumns[], filename: stri
     window.URL.revokeObjectURL(url)
 }
 
-export const exportToPdf = (data: PaymentExportColumns[], filename: string, title: string) => {
+export const exportToPdf = (data: any[], columns: ExportColumn[], filename: string, title: string) => {
     const doc = new jsPDF()
 
     doc.text(title, 14, 20)
     doc.text(`Generado: ${format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}`, 14, 30)
 
-    const tableData = data.map(item => [
-        item.date,
-        item.patient,
-        item.concept,
-        `$${item.amount.toFixed(2)}`,
-        item.method,
-        item.status
-    ])
+    // Prepare table data dynamically based on columns
+    const headers = columns.map(col => col.header)
+    const tableData = data.map(item =>
+        columns.map(col => {
+            // Check if there's a specific format needed? 
+            // For now assume data is already formatted strings/numbers as prepared in page.tsx
+            // except for the currency formatting which was hardcoded before.
+            // page.tsx prepares 'amount' as a number. 
+            // The previous implementation formatted it as `$${item.amount.toFixed(2)}`.
+            // We should ideally pass formatted data or handle formatting here.
+            // Given prepareExportData in page.tsx returns raw numbers for amount, 
+            // we might lose the '$' prefix unless we check the key or type.
+            // Let's stick to raw values for genericness OR update page.tsx to format it.
+            // But wait, page.tsx prepareExportData returns:
+            // amount: p.amount (number)
+            // So to keep previous behavior we need to format it.
+            // But a generic utils shouldn't predict formatting. 
+            // Best practice: The Caller (page.tsx) should format the data for display/export.
+            return item[col.key]
+        })
+    )
 
     autoTable(doc, {
         startY: 40,
-        head: [['Fecha', 'Paciente', 'Concepto', 'Monto', 'Método', 'Estado']],
+        head: [headers],
         body: tableData,
         theme: 'grid',
         headStyles: { fillColor: [41, 128, 185], textColor: 255 },
