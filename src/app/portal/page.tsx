@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Calendar, Activity, Dumbbell, TrendingUp } from 'lucide-react';
 import { ProgressChart } from '@/components/portal/ProgressChart';
 import { PaymentButton } from '@/components/portal/PaymentButton';
+import { LogoutButton } from '@/components/portal/LogoutButton';
 
 export default async function PortalDashboard() {
     const supabase = await createClient();
@@ -59,8 +60,11 @@ export default async function PortalDashboard() {
                     <h1 className="text-3xl font-bold text-slate-900">Hola, {patient.first_name}</h1>
                     <p className="text-slate-600">Bienvenido a tu portal de salud.</p>
                 </div>
-                <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
-                    Paciente
+                <div className="flex items-center gap-4">
+                    <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
+                        Paciente
+                    </div>
+                    <LogoutButton />
                 </div>
             </header>
 
