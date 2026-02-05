@@ -1,7 +1,7 @@
 import { createClient, createAdminClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email'
-import { sendPushNotification } from '@/lib/push-notifications-server'
+import { sendPushNotificationToUser } from '@/lib/push-notifications-server'
 
 export async function POST(request: Request) {
   try {
@@ -38,10 +38,11 @@ export async function POST(request: Request) {
 
       // Send push if user has devices
       if (notification.user_id) {
-        pushResult = await sendPushNotification(notification.user_id, {
-          title: notification.title || 'Nueva Notificación',
-          body: notification.message || 'Tienes un nuevo mensaje'
-        });
+        pushResult = await sendPushNotificationToUser(
+          notification.user_id,
+          notification.title || 'Nueva Notificación',
+          notification.message || 'Tienes un nuevo mensaje'
+        );
       }
 
       return NextResponse.json({
@@ -68,10 +69,11 @@ export async function POST(request: Request) {
         }
 
         // Send push notification to device
-        pushResult = await sendPushNotification(userId, {
-          title: subject,
-          body: text || 'Nuevas actualizaciones en Clinova'
-        });
+        pushResult = await sendPushNotificationToUser(
+          userId,
+          subject,
+          text || 'Nuevas actualizaciones en Clinova'
+        );
       }
 
       // Send email if configured
